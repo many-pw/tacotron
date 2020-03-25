@@ -1,2 +1,4 @@
 tacotron
 metadata.csv
+*.wav
+go.sum
