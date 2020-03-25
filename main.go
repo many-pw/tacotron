@@ -2,10 +2,12 @@ package main
 
 import "fmt"
 import "bufio"
+import "math"
 import "strings"
 import "io"
 import "os"
 import "github.com/youpy/go-wav"
+import "github.com/r9y9/gossp/stft"
 //import "github.com/go-audio/wav"
 
 var wavToWords = map[string]string{}
@@ -46,16 +48,29 @@ func main() {
 
     fmt.Println("Block align is ", wavformat.BlockAlign)
 
-    samples, err := reader.ReadSamples(2048)
-    wav_samples := make([]float64, 0)
+    samples, err := reader.ReadSamples(22050) // 2048
+    wavSamples := make([]float64, 0)
 
     for _, curr_sample := range samples {
-        wav_samples = append(wav_samples, reader.FloatValue(curr_sample, 0))
+       wavSamples = append(wavSamples, reader.FloatValue(curr_sample, 0))
     }
 		
-		ns := uint16(len(wav_samples))/wavformat.NumChannels
-		fmt.Println(ns)
+		ns := uint16(len(wavSamples))/wavformat.NumChannels
 		fmt.Println(wavformat.BitsPerSample, wavformat.SampleRate, wavformat.NumChannels)
+
+
+		peak := float64(0.0)
+		for _, val := range wavSamples {
+			a := math.Abs(val)
+			if a > peak {
+				peak = a
+			}
+		}
+		fmt.Println(peak, ns)
+		
+		s := stft.New(22050,10)
+		complexA := s.STFT(wavSamples)
+		fmt.Println(complexA)
 
 	// peak
 
