@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "bufio"
+//import "math/cmplx"
 import "math"
 import "strings"
 import "io"
@@ -69,9 +70,15 @@ func main() {
 		}
 		fmt.Println(peak, ns)
 		
-		s := stft.New(22050,10)
-		complexA := s.STFT(wavSamples)
-		fmt.Println(complexA)
+		s := stft.New(22050,20)
+		//complexD := [][]complex128{}
+		for _, listOfComplex := range s.STFT(wavSamples) {
+			fmt.Println(len(listOfComplex))
+			for _, val := range listOfComplex {
+				fmt.Println(complex(math.Abs(real(val)), math.Abs(imag(val))))
+			}
+			//complexD = append(complexD, a)
+		}
 
 	// peak
 
