@@ -8,4 +8,5 @@ require (
 	github.com/r9y9/gossp v0.0.1
 	github.com/youpy/go-riff v0.0.0-20131220112943-557d78c11efb // indirect
 	github.com/youpy/go-wav v0.0.0-20160223082350-b63a9887d320
+	gonum.org/v1/gonum v0.7.0
 )

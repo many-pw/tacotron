@@ -9,6 +9,7 @@ import "os"
 import "github.com/youpy/go-wav"
 import "github.com/r9y9/gossp/stft"
 //import "github.com/go-audio/wav"
+// for mat.Dot import "gonum.org/v1/gonum/mat"
 
 var wavToWords = map[string]string{}
 
