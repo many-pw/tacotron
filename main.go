@@ -115,6 +115,9 @@ func main() {
 
 		fmt.Println(min_mel, max_mel)
 
+		mels := vec.Linspace(0.0, max_mel, 130)
+		fmt.Println(mels)
+
 	/*
 	    y = load_wav(path)
     peak = np.abs(y).max()
