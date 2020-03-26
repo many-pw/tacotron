@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "bufio"
+import "github.com/aclements/go-moremath/vec"
 import "math/cmplx"
 import "math"
 import "strings"
@@ -70,7 +71,8 @@ func main() {
 		}
 		fmt.Println(peak, ns)
 		
-		s := stft.New(22050,20)
+		nfft := 20
+		s := stft.New(22050,nfft)
 		complexD := []float64{}
 		for _, listOfComplex := range s.STFT(wavSamples) {
 			for _, val := range listOfComplex {
@@ -86,7 +88,32 @@ func main() {
 		}
 		fmt.Println(complexS)
 
-	// peak
+		nmels := 20
+		//  weights = np.zeros((n_mels, int(1 + n_fft // 2)), dtype=dtype)
+		a := int(1.0+(float64(nfft) / 2.0))
+		fmt.Println(nmels, a)
+
+		a2d := [][]float64{}
+		for i := 0; i<nmels; i++ {
+			thing := []float64{}
+			for j :=0; j<a; j++ {
+				thing = append(thing, 0.0)
+			}
+			a2d = append(a2d, thing)
+		}
+
+		fmt.Println(a2d)
+
+		//each one should be a length
+		//therer should be nmels of them
+	  
+		fftfreqs := vec.Linspace(0.0, 11025.0, 11) 
+		fmt.Println(fftfreqs)
+
+
+
+
+
 
 	/*
 	    y = load_wav(path)
@@ -94,17 +121,6 @@ func main() {
     if hp.peak_norm or peak > 1.0:
         y /= peak
     mel = melspectrogram(y)
-    if hp.voc_mode == 'RAW':
-        quant = encode_mu_law(y, mu=2**hp.bits) if hp.mu_law else float_2_label(y, bits=hp.bits)
-    elif hp.voc_mode == 'MOL':
-        quant = float_2_label(y, bits=16)
-
-    return mel.astype(np.float32), quant.astype(np.int64)
-
-		---- m,x
-		 np.save(paths.mel/f'{wav_id}.npy', m, allow_pickle=False)
-    np.save(paths.quant/f'{wav_id}.npy', x, allow_pickle=False)
-    return wav_id, m.shape[-1]
 		*/
 
 }

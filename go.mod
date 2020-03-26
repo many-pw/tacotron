@@ -3,6 +3,7 @@ module tacotron
 go 1.14
 
 require (
+	github.com/aclements/go-moremath v0.0.0-20190830160640-d16893ddf098
 	github.com/go-audio/wav v1.0.0
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 // indirect
 	github.com/r9y9/gossp v0.0.1
