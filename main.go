@@ -110,10 +110,10 @@ func main() {
 		fftfreqs := vec.Linspace(0.0, 11025.0, 11) 
 		fmt.Println(fftfreqs)
 
+		min_mel := hz_to_mel(0)
+		max_mel := hz_to_mel(11025.0)
 
-
-
-
+		fmt.Println(min_mel, max_mel)
 
 	/*
 	    y = load_wav(path)
@@ -124,6 +124,22 @@ func main() {
 		*/
 
 }
+
+func hz_to_mel(a float64) float64 {
+	f_min := 0.0
+	f_sp := 200.0 / 3.0
+
+	mels := (a - f_min) / f_sp
+
+	min_log_hz := 1000.0    
+	min_log_mel := (min_log_hz - f_min) / f_sp 
+	logstep := math.Log(6.4) / 27.0
+
+	mels = min_log_mel + math.Log(a / min_log_hz) / logstep
+
+	return mels
+}
+
 func readFileLines() {
 	f, err := os.OpenFile("metadata.csv", os.O_RDONLY, os.ModePerm)
 	if err != nil {
