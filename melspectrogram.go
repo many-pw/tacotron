@@ -12,9 +12,10 @@ func melspectrogram(y []float32) {
 }
 
 func stft(y []float32) string {
+	nfft := 2048.0
 	w := getWindow(1101)
 	fmt.Println(w)
-	w = padCenter(w, 2048)
+	w = padCenter(w, int(nfft))
 	fmt.Println("----")
 	fmt.Println(w)
 	shape := [][]float64{}
@@ -23,7 +24,22 @@ func stft(y []float32) string {
 	}
 	fmt.Println(shape)
 
+	s := [][]float32{}
+	s = append(s, []float32{1.0})
+	s = append(s, []float32{2.0})
+	s = append(s, []float32{3.0})
+	yy := pad(s, 1, "reflect")
+	//yy := pad(y, int(math.Ceil(nfft/2.0)), "reflect")
+	fmt.Println(yy)
 	return "w"
+}
+
+func pad(y [][]float32, size int, flavor string) []float32 {
+	start := y[len(y)-2]
+	for i, item := range y {
+		fmt.Println(start, i, item)
+	}
+	return []float32{}
 }
 
 func padCenter(y []float64, size int) []float64 {
