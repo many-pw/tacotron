@@ -44,6 +44,7 @@ func convertFile(path string) ([]float32, []int64) {
 		wavSamples = append(wavSamples, val)
 	}
 	fmt.Println("peak", peak)
+	melspectrogram(wavSamples)
 	x := []int64{}
 	return wavSamples, x
 }
