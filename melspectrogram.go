@@ -17,6 +17,11 @@ func stft(y []float32) string {
 	w = padCenter(w, 2048)
 	fmt.Println("----")
 	fmt.Println(w)
+	shape := [][]float64{}
+	for _, item := range w {
+		shape = append(shape, []float64{item})
+	}
+	fmt.Println(shape)
 
 	return "w"
 }
