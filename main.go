@@ -31,7 +31,8 @@ func convertFile(path string) ([]float32, []int64) {
 	}
 	reader := wav.NewReader(file)
 	wavformat, err := reader.Format()
-	fmt.Println(wavformat, err)
+	samples, err := reader.ReadSamples(22050) // 2048
+	fmt.Println(samples, wavformat, err)
 	/*
 		wavformat.SampleRate = 22050
 		wavformat.ByteRate = 22050 * 2
