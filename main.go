@@ -30,32 +30,15 @@ func convertFile(path string) ([]float32, []int64) {
 		panic(err)
 	}
 	reader := wav.NewReader(file)
-	wavformat, err := reader.Format()
 	samples, err := reader.ReadSamples(22050) // 2048
-	fmt.Println(samples, wavformat, err)
-	/*
-		wavformat.SampleRate = 22050
-		wavformat.ByteRate = 22050 * 2
+	fmt.Println(len(samples), err)
+	wavSamples := make([]float32, 0)
 
-		if err_rd != nil {
-			panic(err_rd)
-		}
-
-		if wavformat.AudioFormat != wav.AudioFormatPCM {
-			panic("Audio format is invalid ")
-		}
-
-		fmt.Println("Block align is ", wavformat.BlockAlign)
-
-		samples, err := reader.ReadSamples(22050) // 2048
-		wavSamples := make([]float32, 0)
-
-		for _, curr_sample := range samples {
-			wavSamples = append(wavSamples, float32(reader.FloatValue(curr_sample, 0)))
-		}
-	*/
+	//for _, curr_sample := range samples {
+	//wavSamples = append(wavSamples, reader.FloatValue(curr_sample, 0)*2.0)
+	//}
 	x := []int64{}
-	return []float32{}, x
+	return wavSamples, x
 }
 
 func processWav(path string) {

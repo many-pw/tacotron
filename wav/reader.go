@@ -2,6 +2,7 @@ package wav
 
 import "errors"
 import "bufio"
+import "io/ioutil"
 import "fmt"
 import "math"
 import "encoding/binary"
@@ -18,7 +19,7 @@ func NewReader(r RIFFReader) *Reader {
 	return &Reader{rr: riffReader}
 }
 
-func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
+func (r *Reader) OldReadSamples(params ...uint32) (samples []Sample, err error) {
 	var bytes []byte
 	var numSamples, b, n int
 
@@ -37,8 +38,11 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 	blockAlign := int(format.BlockAlign)
 	bitsPerSample := int(format.BitsPerSample)
 
+	fmt.Printf("numChannels: %d\n", numChannels)
+	fmt.Printf("blockAlign: %d\n", blockAlign)
+	fmt.Printf("bitsPerSample: %d\n", bitsPerSample)
+
 	bytes = make([]byte, numSamples*blockAlign)
-	fmt.Println("aaa", len(bytes))
 	n, err = r.Read(bytes)
 
 	if err != nil {
@@ -46,11 +50,16 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 	}
 
 	numSamples = n / blockAlign
+	fmt.Printf("i read %d bytes.\n", n)
+	fmt.Printf("%d / 2 = %d \n", n, n/2)
+	fmt.Printf("pos: %d\n", r.WavData.pos)
 	r.WavData.pos += uint32(numSamples * blockAlign)
+	fmt.Printf("pos: %d\n", r.WavData.pos)
 	samples = make([]Sample, numSamples)
 	offset := 0
 
 	for i := 0; i < numSamples; i++ {
+		//fmt.Printf("i: %d\n", i)
 		if format.AudioFormat == AudioFormatIEEEFloat {
 			for j := 0; j < numChannels; j++ {
 				soffset := offset + (j * bitsPerSample / 8)
@@ -65,10 +74,13 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 		} else {
 			for j := 0; j < numChannels; j++ {
 				soffset := offset + (j * bitsPerSample / 8)
+				//fmt.Printf("offset, j, j * bitsPerSample, f: %v, %v, %v, %v\n",
+				//offset, j, bitsPerSample/8, j*bitsPerSample/8)
 
 				var val uint
 				for b = 0; b*8 < bitsPerSample; b++ {
 					val += uint(bytes[soffset+b]) << uint(b*8)
+					//fmt.Printf("b: %v %v\n", b, val)
 				}
 
 				samples[i].Values[j] = toInt(val, bitsPerSample)
@@ -80,10 +92,30 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 
 	return
 }
+func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
+	format, err := r.Format()
+	if err != nil {
+		return
+	}
+
+	//numSamples := 22050
+	blockAlign := int(format.BlockAlign)
+	bitsPerSample := int(format.BitsPerSample)
+
+	fmt.Printf("blockAlign: %d\n", blockAlign)
+	fmt.Printf("bitsPerSample: %d\n", bitsPerSample)
+
+	data, _ := r.readData()
+	fmt.Println(data)
+	all, _ := ioutil.ReadAll(data)
+	fmt.Println(len(all))
+
+	samples = make([]Sample, 1)
+	return
+}
 
 func findChunk(riffChunk *RIFFChunk, id string) (chunk *Chunk) {
-	for i, ch := range riffChunk.Chunks {
-		fmt.Println(i, string(ch.ChunkID[:]))
+	for _, ch := range riffChunk.Chunks {
 		if string(ch.ChunkID[:]) == id {
 			chunk = ch
 			break
@@ -147,6 +179,8 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 		r.WavData = data
 	}
 
+	fmt.Println(r.WavData.Size, len(p))
+
 	return r.WavData.Read(p)
 }
 
@@ -173,4 +207,12 @@ func (r *Reader) readData() (data *WavData, err error) {
 	data = &WavData{bufio.NewReader(dataChunk), dataChunk.ChunkSize, 0}
 
 	return
+}
+
+func (r *Reader) IntValue(sample Sample, channel uint) int {
+	return sample.Values[channel]
+}
+
+func (r *Reader) FloatValue(sample Sample, channel uint) float32 {
+	return float32(float64(r.IntValue(sample, channel)) / math.Pow(2, float64(r.format.BitsPerSample)))
 }
