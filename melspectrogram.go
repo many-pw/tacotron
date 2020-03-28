@@ -35,10 +35,32 @@ func stft(y []float32) string {
 }
 
 func pad(y [][]float32, size int, flavor string) []float32 {
-	start := y[len(y)-2]
-	for i, item := range y {
-		fmt.Println(start, i, item)
+	s := [][]float32{}
+	j := len(y) - 2
+	direction := "down"
+	for {
+		start := y[j]
+		start = append(start, start[0])
+		start = append(start, start[0])
+		s = append(s, start)
+		if len(s) >= 5 {
+			break
+		}
+		if direction == "down" {
+			j--
+			if j < 0 {
+				j += 2
+				direction = "up"
+			}
+		} else {
+			j++
+			if j > len(y)-1 {
+				j -= 2
+				direction = "down"
+			}
+		}
 	}
+	fmt.Println(s)
 	return []float32{}
 }
 
