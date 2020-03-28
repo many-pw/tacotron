@@ -34,9 +34,9 @@ func convertFile(path string) ([]float32, []int64) {
 	fmt.Println(len(samples), err)
 	wavSamples := make([]float32, 0)
 
-	//for _, curr_sample := range samples {
-	//wavSamples = append(wavSamples, reader.FloatValue(curr_sample, 0)*2.0)
-	//}
+	for _, curr_sample := range samples {
+		wavSamples = append(wavSamples, 2.0*reader.FloatValue(curr_sample, 0))
+	}
 	x := []int64{}
 	return wavSamples, x
 }

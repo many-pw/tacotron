@@ -19,6 +19,40 @@ func NewReader(r RIFFReader) *Reader {
 	return &Reader{rr: riffReader}
 }
 
+func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
+	format, err := r.Format()
+	if err != nil {
+		return
+	}
+
+	//numSamples := 22050
+	blockAlign := int(format.BlockAlign)
+	bitsPerSample := int(format.BitsPerSample)
+
+	fmt.Printf("blockAlign: %d\n", blockAlign)
+	fmt.Printf("bitsPerSample: %d\n", bitsPerSample)
+
+	data, _ := r.readData()
+	fmt.Println(data)
+	all, _ := ioutil.ReadAll(data)
+	fmt.Println(len(all))
+	samples = make([]Sample, len(all)/2)
+	offset := 0
+	j := 0
+	for i := 0; i < len(samples); i++ {
+		soffset := offset + (j * bitsPerSample / 8)
+
+		var val uint
+		for b := 0; b*8 < bitsPerSample; b++ {
+			val += uint(all[soffset+b]) << uint(b*8)
+		}
+
+		samples[i].Values[j] = toInt(val, bitsPerSample)
+		offset += blockAlign
+	}
+
+	return
+}
 func (r *Reader) OldReadSamples(params ...uint32) (samples []Sample, err error) {
 	var bytes []byte
 	var numSamples, b, n int
@@ -90,27 +124,6 @@ func (r *Reader) OldReadSamples(params ...uint32) (samples []Sample, err error) 
 		offset += blockAlign
 	}
 
-	return
-}
-func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
-	format, err := r.Format()
-	if err != nil {
-		return
-	}
-
-	//numSamples := 22050
-	blockAlign := int(format.BlockAlign)
-	bitsPerSample := int(format.BitsPerSample)
-
-	fmt.Printf("blockAlign: %d\n", blockAlign)
-	fmt.Printf("bitsPerSample: %d\n", bitsPerSample)
-
-	data, _ := r.readData()
-	fmt.Println(data)
-	all, _ := ioutil.ReadAll(data)
-	fmt.Println(len(all))
-
-	samples = make([]Sample, 1)
 	return
 }
 
