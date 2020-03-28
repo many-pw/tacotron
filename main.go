@@ -34,16 +34,23 @@ func convertFile(path string) ([]float32, []int64) {
 	fmt.Println(len(samples), err)
 	wavSamples := make([]float32, 0)
 
+	peak := float32(0.0)
 	for _, curr_sample := range samples {
-		wavSamples = append(wavSamples, 2.0*reader.FloatValue(curr_sample, 0))
+		val := 2.0 * reader.FloatValue(curr_sample, 0)
+		absVal := float32(math.Abs(float64(val)))
+		if absVal > peak {
+			peak = absVal
+		}
+		wavSamples = append(wavSamples, val)
 	}
+	fmt.Println("peak", peak)
 	x := []int64{}
 	return wavSamples, x
 }
 
 func processWav(path string) {
 	m, x := convertFile(path)
-	fmt.Println(m, x)
+	fmt.Println(len(m), x)
 }
 
 func main() {
