@@ -15,15 +15,34 @@ func stft(y []float32) string {
 	w := getWindow(1101)
 	fmt.Println(w)
 	w = padCenter(w, 2048)
+	fmt.Println("----")
+	fmt.Println(w)
 
 	return "w"
 }
 
 func padCenter(y []float64, size int) []float64 {
-	lpad := math.Ceil((float64(size) - float64(len(y))) / 2.0)
-	fmt.Println(lpad)
+	c := []float64{}
+	lpad := int(math.Ceil((float64(size) - float64(len(y))) / 2.0))
+	//other := size - len(y) - lpad
+	i := 0
+	for {
+		if len(c) < lpad {
+			c = append(c, 0)
+		} else {
+			if i < len(y) {
+				c = append(c, y[i])
+				i++
+			} else {
+				c = append(c, 0)
+			}
+		}
+		if len(c) == size {
+			break
+		}
+	}
 
-	return []float64{}
+	return c
 }
 
 func getWindow(length int) []float64 {
