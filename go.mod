@@ -1,4 +1,4 @@
-module tacotron
+module github.com/many-pw/tacotron
 
 go 1.14
 

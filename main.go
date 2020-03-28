@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "bufio"
+import "github.com/many-pw/tacotron/wav"
 
 //import "github.com/aclements/go-moremath/vec"
 //import "math/cmplx"
@@ -9,7 +10,8 @@ import "math"
 import "strings"
 import "io"
 import "os"
-import "github.com/youpy/go-wav"
+
+//import "github.com/youpy/go-wav"
 
 //import "github.com/r9y9/gossp/stft"
 
@@ -28,26 +30,31 @@ func convertFile(path string) ([]float32, []int64) {
 		panic(err)
 	}
 	reader := wav.NewReader(file)
-	wavformat, err_rd := reader.Format()
-	if err_rd != nil {
-		panic(err_rd)
-	}
+	wavformat, err := reader.Format()
+	fmt.Println(wavformat, err)
+	/*
+		wavformat.SampleRate = 22050
+		wavformat.ByteRate = 22050 * 2
 
-	if wavformat.AudioFormat != wav.AudioFormatPCM {
-		panic("Audio format is invalid ")
-	}
+		if err_rd != nil {
+			panic(err_rd)
+		}
 
-	fmt.Println("Block align is ", wavformat.BlockAlign)
+		if wavformat.AudioFormat != wav.AudioFormatPCM {
+			panic("Audio format is invalid ")
+		}
 
-	samples, err := reader.ReadSamples(22050) // 2048
-	wavSamples := make([]float32, 0)
+		fmt.Println("Block align is ", wavformat.BlockAlign)
 
-	for _, curr_sample := range samples {
-		wavSamples = append(wavSamples, float32(reader.FloatValue(curr_sample, 0)))
-	}
+		samples, err := reader.ReadSamples(22050) // 2048
+		wavSamples := make([]float32, 0)
 
+		for _, curr_sample := range samples {
+			wavSamples = append(wavSamples, float32(reader.FloatValue(curr_sample, 0)))
+		}
+	*/
 	x := []int64{}
-	return wavSamples, x
+	return []float32{}, x
 }
 
 func processWav(path string) {
