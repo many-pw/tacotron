@@ -21,7 +21,8 @@ import "github.com/youpy/go-wav"
 
 var wavToWords = map[string]string{}
 
-func processWav(path string) {
+func convertFile(path string) ([]float32, []int64) {
+
 	file, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -39,14 +40,19 @@ func processWav(path string) {
 	fmt.Println("Block align is ", wavformat.BlockAlign)
 
 	samples, err := reader.ReadSamples(22050) // 2048
-	wavSamples := make([]float64, 0)
+	wavSamples := make([]float32, 0)
 
 	for _, curr_sample := range samples {
-		wavSamples = append(wavSamples, reader.FloatValue(curr_sample, 0))
+		wavSamples = append(wavSamples, float32(reader.FloatValue(curr_sample, 0)))
 	}
 
-	//ns := uint16(len(wavSamples)) / wavformat.NumChannels
-	fmt.Println(wavformat.BitsPerSample, wavformat.SampleRate, wavformat.NumChannels)
+	x := []int64{}
+	return wavSamples, x
+}
+
+func processWav(path string) {
+	m, x := convertFile(path)
+	fmt.Println(m, x)
 }
 
 func main() {
