@@ -35,7 +35,7 @@ func stft(y []float32) string {
 
 	s := []float32{1, 2, 3}
 	y2d := frame(s, 1, 1)
-	fmt.Println(y2d)
+	fmt.Println(y2d.String())
 
 	return ""
 }
