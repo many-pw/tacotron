@@ -45,7 +45,7 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 	} else if len(s)%4 == 2 {
 		j = len(y) - 2
 	} else {
-		j = len(y) - 2
+		j = len(y) - 1
 	}
 	direction := "down"
 	special := []float32{}
@@ -69,11 +69,12 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 		}
 		fmt.Println(len(s))
 		if len(s) >= (size*2+len(y))-1 {
+			fmt.Println("a", special, "|", s)
 			if len(s)%4 == 0 {
-				//s = append([][]float32{special}, s...)
-				s = append(s, special)
+				//s = append(s, special)
+				s = append([][]float32{special}, s...)
 			} else if len(s)%4 == 1 {
-				s = append(s, special)
+				s = append([][]float32{special}, s...)
 			} else if len(s)%4 == 2 {
 				s = append([][]float32{special}, s...)
 			} else {
