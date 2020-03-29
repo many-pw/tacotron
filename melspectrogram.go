@@ -50,7 +50,7 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 		}
 	} else {
 		if size%2 == 0 {
-			j = len(y) - 2
+			j = len(y) - 1
 		} else {
 			j = len(y) - 2
 		}
@@ -88,7 +88,8 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 				}
 			} else {
 				if size%2 == 0 {
-					s = append(s, special)
+					//s = append(s, special)
+					s = append([][]float32{special}, s...)
 				} else {
 					//s = append(s, special)
 					s = append([][]float32{special}, s...)
