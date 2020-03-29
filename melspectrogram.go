@@ -43,9 +43,9 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 	} else if len(s)%4 == 1 {
 		j = len(y) - 1
 	} else if len(s)%4 == 2 {
-		j = len(y) - 1
+		j = len(y) - 2
 	} else {
-		j = len(y) - 1
+		j = len(y) - 2
 	}
 	direction := "down"
 	special := []float32{}
