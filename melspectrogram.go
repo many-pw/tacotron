@@ -14,25 +14,27 @@ func melspectrogram(y []float32) {
 func stft(y []float32) string {
 	nfft := 2048.0
 	w := getWindow(1101)
-	fmt.Println(w)
+	//fmt.Println(w)
 	w = padCenter(w, int(nfft))
-	fmt.Println("----")
-	fmt.Println(w)
+	//fmt.Println("----")
+	//fmt.Println(w)
 	shape := [][]float64{}
 	for _, item := range w {
 		shape = append(shape, []float64{item})
 	}
-	fmt.Println(shape)
+	//fmt.Println(shape)
 
 	s := [][]float32{}
 	s = append(s, []float32{1.0})
 	s = append(s, []float32{2.0})
 	s = append(s, []float32{3.0})
-	s = append(s, []float32{4.0})
-	yy := pad(s, 2, "reflect")
-	//yy := pad(y, int(math.Ceil(nfft/2.0)), "reflect")
+	yy := pad(s, 1, "reflect")
 	fmt.Println(yy)
-	return "w"
+	s = append(s, []float32{4.0})
+	yy = pad(s, 1, "reflect")
+	fmt.Println(yy)
+	//yy := pad(y, int(math.Ceil(nfft/2.0)), "reflect")
+	return ""
 }
 
 func pad(y [][]float32, size int, padFlavor string) []float32 {
@@ -44,13 +46,13 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 		if size%2 == 0 {
 			j = len(y) - 2
 		} else {
-			j = len(y) - 1
+			j = len(y) - 2
 		}
 	} else {
 		if size%2 == 0 {
-			j = len(y) - 1
+			j = len(y) - 2
 		} else {
-			j = len(y) - 1
+			j = len(y) - 2
 		}
 	}
 	direction := "down"
@@ -71,25 +73,25 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 			special = append([]float32{}, s[0]...)
 			s[0] = append([]float32{}, start...)
 		} else {
-			fmt.Println("a", s, "|", start)
+			//fmt.Println("a", s, "|", start)
 			s = append(s, start)
 		}
-		fmt.Println(len(s))
+		//fmt.Println(len(s))
 		if len(s) >= factor-1 {
 			fmt.Println("a", special, "|", s)
-			if size%2 == 0 {
-				if len(y)%2 == 0 {
+			if len(y)%2 == 0 {
+				if size%2 == 0 {
 					s = append([][]float32{special}, s...)
 				} else {
-					s = append([][]float32{special}, s...)
+					s = append(s, special)
+					//s = append([][]float32{special}, s...)
 				}
 			} else {
-				if len(y)%2 == 0 {
-					//s = append([][]float32{special}, s...)
+				if size%2 == 0 {
 					s = append(s, special)
 				} else {
-					//s = append([][]float32{special}, s...)
-					s = append(s, special)
+					//s = append(s, special)
+					s = append([][]float32{special}, s...)
 				}
 			}
 			break
@@ -140,7 +142,7 @@ func padCenter(y []float64, size int) []float64 {
 
 func getWindow(length int) []float64 {
 	fac := vec.Linspace(math.Pi*-1, math.Pi, length)
-	fmt.Println(len(fac))
+	//fmt.Println(len(fac))
 	w := []float64{}
 	alpha := float64(0.5)
 	a := [2]float64{alpha, 1.0 - alpha}

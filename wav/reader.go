@@ -192,7 +192,7 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 		r.WavData = data
 	}
 
-	fmt.Println(r.WavData.Size, len(p))
+	//fmt.Println(r.WavData.Size, len(p))
 
 	return r.WavData.Read(p)
 }

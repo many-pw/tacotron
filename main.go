@@ -31,7 +31,7 @@ func convertFile(path string) ([]float32, []int64) {
 	}
 	reader := wav.NewReader(file)
 	samples, err := reader.ReadSamples(22050) // 2048
-	fmt.Println(len(samples), err)
+	//fmt.Println(len(samples), err)
 	wavSamples := make([]float32, 0)
 
 	peak := float32(0.0)
@@ -50,8 +50,9 @@ func convertFile(path string) ([]float32, []int64) {
 }
 
 func processWav(path string) {
-	m, x := convertFile(path)
-	fmt.Println(len(m), x)
+	//m, x :=
+	convertFile(path)
+	//fmt.Println(len(m), x)
 }
 
 func main() {
