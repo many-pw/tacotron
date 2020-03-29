@@ -29,7 +29,7 @@ func stft(y []float32) string {
 	s = append(s, []float32{2.0})
 	s = append(s, []float32{3.0})
 	//s = append(s, []float32{4.0})
-	yy := pad(s, 1, "reflect")
+	yy := pad(s, 2, "reflect")
 	//yy := pad(y, int(math.Ceil(nfft/2.0)), "reflect")
 	fmt.Println(yy)
 	return "w"
@@ -38,14 +38,20 @@ func stft(y []float32) string {
 func pad(y [][]float32, size int, padFlavor string) []float32 {
 	s := [][]float32{}
 	j := 0
-	if len(s)%4 == 0 {
-		j = len(y) - 2
-	} else if len(s)%4 == 1 {
-		j = len(y) - 1
-	} else if len(s)%4 == 2 {
-		j = len(y) - 1
+	size2 := size * 2
+	factor := size2 + len(y)
+	if size%2 == 0 {
+		if len(y)%2 == 0 {
+			j = len(y) - 1
+		} else {
+			j = len(y) - 1
+		}
 	} else {
-		j = len(y) - 2
+		if len(y)%2 == 0 {
+			j = len(y) - 1
+		} else {
+			j = len(y) - 2
+		}
 	}
 	direction := "down"
 	special := []float32{}
@@ -68,16 +74,22 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 			s = append(s, start)
 		}
 		fmt.Println(len(s))
-		if len(s) >= (size*2+len(y))-1 {
+		if len(s) >= factor-1 {
 			fmt.Println("a", special, "|", s)
-			if len(s)%4 == 0 {
-				s = append([][]float32{special}, s...)
-			} else if len(s)%4 == 1 {
-				s = append(s, special)
-			} else if len(s)%4 == 2 {
-				s = append(s, special)
+			if size%2 == 0 {
+				if len(y)%2 == 0 {
+					j = len(y) - 1
+					//s = append(s, special)
+					s = append([][]float32{special}, s...)
+				} else {
+					s = append([][]float32{special}, s...)
+				}
 			} else {
-				s = append([][]float32{special}, s...)
+				if len(y)%2 == 0 {
+					s = append([][]float32{special}, s...)
+				} else {
+					s = append([][]float32{special}, s...)
+				}
 			}
 			break
 		}
