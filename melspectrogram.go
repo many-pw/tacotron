@@ -39,11 +39,11 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 	s := [][]float32{}
 	j := 0
 	if len(s)%4 == 0 {
-		j = len(y) - 2
+		j = len(y) - 1
 	} else if len(s)%4 == 1 {
 		j = len(y) - 1
 	} else if len(s)%4 == 2 {
-		j = len(y) - 2
+		j = len(y) - 1
 	} else {
 		j = len(y) - 1
 	}
@@ -53,9 +53,9 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 		start := append([]float32{}, y[j]...)
 		i := 0
 		for {
-			s0 := append([]float32{}, start...)
-			start = append(start, s0...)
-			start = append(start, s0...)
+			s0 := float32(start[0])
+			start = append(start, s0)
+			start = append(start, s0)
 			i++
 			if size == i {
 				break
@@ -70,13 +70,14 @@ func pad(y [][]float32, size int, padFlavor string) []float32 {
 		fmt.Println(len(s))
 		if len(s) >= (size*2+len(y))-1 {
 			if len(s)%4 == 0 {
-				s = append([][]float32{special}, s...)
+				//s = append([][]float32{special}, s...)
+				s = append(s, special)
 			} else if len(s)%4 == 1 {
 				s = append(s, special)
 			} else if len(s)%4 == 2 {
-				s = append(s, special)
+				s = append([][]float32{special}, s...)
 			} else {
-				s = append(s, special)
+				s = append([][]float32{special}, s...)
 			}
 			break
 		}
