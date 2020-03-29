@@ -23,7 +23,7 @@ func findKids(f *Frame, level int) {
 
 func (f *Frame) String() string {
 	findKids(f, 0)
-	fmt.Print("]\n")
+	fmt.Print("]]\n")
 	return ""
 }
 
@@ -32,12 +32,8 @@ func frame(y []float32, frameLength, hopLength int) *Frame {
 	froot := Frame{}
 	froot.List = []*Frame{}
 
-	wrapper := Frame{}
-	wrapper.List = []*Frame{}
-	wrapper.List = append(wrapper.List, framePart(2, 3))
-	wrapper.List = append(wrapper.List, framePart(2, 3))
+	froot.List = append(froot.List, framePart(2, len(y)-1))
 
-	froot.List = append(froot.List, &wrapper)
 	return &froot
 }
 func framePart(size, many int) *Frame {
@@ -62,12 +58,9 @@ func framePart(size, many int) *Frame {
 		}
 	}
 
-	wrapper := Frame{}
-	wrapper.List = []*Frame{}
 	for _, f := range items {
-		wrapper.List = append(wrapper.List, f)
+		froot.List = append(froot.List, f)
 	}
 
-	froot.List = append(froot.List, &wrapper)
 	return &froot
 }
