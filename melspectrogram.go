@@ -6,7 +6,7 @@ import "fmt"
 
 func melspectrogram(y []float32) {
 	D := stft(y)
-	fmt.Println(D)
+	fmt.Println(len(D))
 	//S = amp_to_db(linear_to_mel(np.abs(D)))
 	//return normalize(S)
 }
@@ -24,97 +24,24 @@ func stft(y []float32) string {
 	}
 	//fmt.Println(shape)
 
-	s := [][]float32{}
-	s = append(s, []float32{1.0})
-	s = append(s, []float32{2.0})
-	s = append(s, []float32{3.0})
-	yy := pad(s, 1, "reflect")
+	s := []float32{}
+	s = append(s, 1.0)
+	s = append(s, 2.0)
+	s = append(s, 3.0)
+	yy := pad1D(s, 1, "reflect")
 	fmt.Println(yy)
-	s = append(s, []float32{4.0})
-	yy = pad(s, 1, "reflect")
+	yy = pad1D(s, 2, "reflect")
 	fmt.Println(yy)
-	//yy := pad(y, int(math.Ceil(nfft/2.0)), "reflect")
+	s = append(s, 4.0)
+	yy = pad1D(s, 1, "reflect")
+	fmt.Println(yy)
+	yy = pad1D(s, 2, "reflect")
+	fmt.Println(yy)
+	//fmt.Println(y[0:3])
+	//fmt.Println("..")
+	//yy := pad(s2, int(math.Ceil(nfft/2.0)), "reflect")
+	//fmt.Println(yy[0:3])
 	return ""
-}
-
-func pad(y [][]float32, size int, padFlavor string) []float32 {
-	s := [][]float32{}
-	j := 0
-	size2 := size * 2
-	factor := size2 + len(y)
-	if len(y)%2 == 0 {
-		if size%2 == 0 {
-			j = len(y) - 2
-		} else {
-			j = len(y) - 2
-		}
-	} else {
-		if size%2 == 0 {
-			j = len(y) - 1
-		} else {
-			j = len(y) - 2
-		}
-	}
-	direction := "down"
-	special := []float32{}
-	for {
-		start := append([]float32{}, y[j]...)
-		i := 0
-		for {
-			s0 := float32(start[0])
-			start = append(start, s0)
-			start = append(start, s0)
-			i++
-			if size == i {
-				break
-			}
-		}
-		if len(s) == 1 && len(special) == 0 {
-			special = append([]float32{}, s[0]...)
-			s[0] = append([]float32{}, start...)
-		} else {
-			//fmt.Println("a", s, "|", start)
-			s = append(s, start)
-		}
-		//fmt.Println(len(s))
-		if len(s) >= factor-1 {
-			fmt.Println("a", special, "|", s)
-			if len(y)%2 == 0 {
-				if size%2 == 0 {
-					s = append([][]float32{special}, s...)
-				} else {
-					s = append(s, special)
-					//s = append([][]float32{special}, s...)
-				}
-			} else {
-				if size%2 == 0 {
-					//s = append(s, special)
-					s = append([][]float32{special}, s...)
-				} else {
-					//s = append(s, special)
-					s = append([][]float32{special}, s...)
-				}
-			}
-			break
-		}
-		if direction == "down" {
-			j--
-			if j < 0 {
-				j += 2
-				direction = "up"
-			}
-		} else {
-			j++
-			if j > len(y)-1 {
-				j -= 2
-				direction = "down"
-			}
-		}
-	}
-	for _, s := range s {
-		fmt.Println(s)
-	}
-	return []float32{}
 }
 
 func padCenter(y []float64, size int) []float64 {
