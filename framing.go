@@ -32,18 +32,41 @@ func frame(y []float32, frameLength, hopLength int) *Frame {
 	froot := Frame{}
 	froot.List = []*Frame{}
 
-	f1 := Frame{}
-	f1.List = []*Frame{}
-	f2 := Frame{}
-	f2.List = []*Frame{}
+	wrapper := Frame{}
+	wrapper.List = []*Frame{}
+	wrapper.List = append(wrapper.List, framePart(2, 3))
+	wrapper.List = append(wrapper.List, framePart(2, 3))
 
-	f1.Data = []float32{1, 2}
-	f2.Data = []float32{4, 5}
+	froot.List = append(froot.List, &wrapper)
+	return &froot
+}
+func framePart(size, many int) *Frame {
+
+	froot := Frame{}
+	froot.List = []*Frame{}
+
+	items := []*Frame{}
+	for {
+		f := Frame{}
+		f.List = []*Frame{}
+		f.Data = []float32{}
+		for {
+			f.Data = append(f.Data, 1)
+			if len(f.Data) == many {
+				break
+			}
+		}
+		items = append(items, &f)
+		if len(items) == size {
+			break
+		}
+	}
 
 	wrapper := Frame{}
 	wrapper.List = []*Frame{}
-	wrapper.List = append(wrapper.List, &f1)
-	wrapper.List = append(wrapper.List, &f2)
+	for _, f := range items {
+		wrapper.List = append(wrapper.List, f)
+	}
 
 	froot.List = append(froot.List, &wrapper)
 	return &froot
