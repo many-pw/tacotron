@@ -32,14 +32,14 @@ func frame(y []float32, frameLength, hopLength int) *Frame {
 	froot := Frame{}
 	froot.List = []*Frame{}
 
-	froot.List = append(froot.List, framePart(2, len(y)-1))
+	w := Frame{}
+	w.List = []*Frame{}
+	framePart(&w, 4, len(y)-1)
+	froot.List = append(froot.List, &w)
 
 	return &froot
 }
-func framePart(size, many int) *Frame {
-
-	froot := Frame{}
-	froot.List = []*Frame{}
+func framePart(w *Frame, size, many int) {
 
 	items := []*Frame{}
 	for {
@@ -59,8 +59,6 @@ func framePart(size, many int) *Frame {
 	}
 
 	for _, f := range items {
-		froot.List = append(froot.List, f)
+		w.List = append(w.List, f)
 	}
-
-	return &froot
 }
