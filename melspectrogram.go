@@ -24,23 +24,19 @@ func stft(y []float32) string {
 	}
 	//fmt.Println(shape)
 
-	s := []float32{}
-	s = append(s, 1.0)
-	s = append(s, 2.0)
-	s = append(s, 3.0)
-	yy := pad1D(s, 1, "reflect")
-	fmt.Println(yy)
-	yy = pad1D(s, 2, "reflect")
-	fmt.Println(yy)
-	s = append(s, 4.0)
-	yy = pad1D(s, 1, "reflect")
-	fmt.Println(yy)
-	yy = pad1D(s, 2, "reflect")
-	fmt.Println(yy)
-	//fmt.Println(y[0:3])
-	//fmt.Println("..")
-	//yy := pad(s2, int(math.Ceil(nfft/2.0)), "reflect")
-	//fmt.Println(yy[0:3])
+	//s := []float32{1,2,3}
+	//yy := pad1D(s, 6, "reflect")
+	//fmt.Println(yy)
+	fmt.Println(y[0:3])
+	fmt.Println("..")
+	yy := pad1D(y, int(math.Ceil(nfft/2.0)), "reflect")
+	fmt.Println(yy[0:3])
+	fmt.Println(yy[len(yy)-3:])
+
+	s := []float32{1, 2, 3}
+	y2d := frame(s, 1, 1)
+	fmt.Println(y2d)
+
 	return ""
 }
 
