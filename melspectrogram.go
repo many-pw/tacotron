@@ -28,7 +28,7 @@ func stft(y []float32) string {
 	s = append(s, []float32{1.0})
 	s = append(s, []float32{2.0})
 	s = append(s, []float32{3.0})
-	//s = append(s, []float32{4.0})
+	s = append(s, []float32{4.0})
 	yy := pad(s, 1, "reflect")
 	//yy := pad(y, int(math.Ceil(nfft/2.0)), "reflect")
 	fmt.Println(yy)
@@ -51,8 +51,12 @@ func pad(y [][]float32, size int, flavor string) []float32 {
 			s = append(s, start)
 		}
 		fmt.Println(len(s))
-		if len(s) >= 4 {
-			s = append(s, special)
+		if len(s) >= 5 {
+			if len(s)%2 == 0 {
+				s = append([][]float32{special}, s...)
+			} else {
+				s = append(s, special)
+			}
 			break
 		}
 		if direction == "down" {
