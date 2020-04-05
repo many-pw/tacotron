@@ -1,4 +1,5 @@
 tacotron
+.DS_Store
 metadata.csv
 *.wav
 go.sum

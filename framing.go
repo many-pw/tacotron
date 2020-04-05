@@ -34,7 +34,7 @@ func frame(y []float32, frameLength, hopLength int) *Frame {
 
 	w := Frame{}
 	w.List = []*Frame{}
-	framePart(&w, 4, len(y)-1)
+	framePart(&w, 2, len(y)-1)
 	froot.List = append(froot.List, &w)
 
 	return &froot
