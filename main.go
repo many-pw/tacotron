@@ -3,7 +3,13 @@ package main
 import "os"
 import "math"
 import "fmt"
+import "sort"
 import "github.com/many-pw/tacotron/wav"
+
+type Thing struct {
+	Count int
+	Name  int
+}
 
 func main() {
 	if len(os.Args) == 1 {
@@ -25,7 +31,8 @@ func main() {
 	dir := ""
 	prevVal := 0.0
 	count := 0
-	for _, cur := range samples {
+	counts := map[int]int{}
+	for i, cur := range samples {
 		//fmt.Println(cur)
 		val := float64(1.0 * reader.FloatValue(cur, 0))
 		if val > prevVal && dir != "up" {
@@ -36,7 +43,8 @@ func main() {
 			count = 0
 		} else {
 			count += 1
-			fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
+			//fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
+			counts[i] = count
 		}
 		prevVal = val
 		if val < low {
@@ -48,4 +56,18 @@ func main() {
 		}
 	}
 	fmt.Println(peak, low)
+	things := []Thing{}
+	for k, v := range counts {
+		thing := Thing{v, k}
+		things = append(things, thing)
+	}
+	sort.Slice(things, func(i, j int) bool {
+		return things[i].Count > things[j].Count
+	})
+	for i, thing := range things {
+		fmt.Println(thing.Count, thing.Name)
+		if i > 10000 {
+			break
+		}
+	}
 }
