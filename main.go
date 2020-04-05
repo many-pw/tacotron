@@ -21,13 +21,13 @@ func main() {
 		panic(err)
 	}
 	reader := wav.NewReader(file)
-	f, _ := reader.Format()
-	seconds := reader.Duration(f)
-	fmt.Println("duration", seconds)
+	f, meta := reader.Format()
+	fmt.Println("duration", meta.Duration)
+
 	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
 	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
 	fmt.Println("BitsPerSample", f.BitsPerSample)
-	samples, _ := reader.ReadSamples()
+	samples, _ := reader.ReadSamples(f, meta)
 	peak := float64(-1.0)
 	low := float64(1.0)
 	dir := ""
@@ -36,7 +36,7 @@ func main() {
 	counts := map[int]int{}
 	for i, cur := range samples {
 		//fmt.Println(cur)
-		val := float64(1.0 * reader.FloatValue(cur, 0))
+		val := float64(1.0 * reader.FloatValue(f, cur, 0))
 		if val > prevVal && dir != "up" {
 			dir = "up"
 			count = 0

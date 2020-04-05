@@ -19,29 +19,12 @@ func NewReader(r RIFFReader) *Reader {
 	return &Reader{rr: riffReader}
 }
 
-// duration := time.Duration((float64(p.Size) / float64(p.AvgBytesPerSec)) * float64(time.Second))
-//SampleRate * NumChannels * BitsPerSample/8
-func (r *Reader) Duration(f *WavFormat) float64 {
-	sampleRate := int(f.SampleRate)
+func (r *Reader) ReadSamples(f *WavFormat, meta *WavMeta) (samples []Sample, err error) {
+	blockAlign := int(f.BlockAlign)
 	bitsPerSample := int(f.BitsPerSample)
-	numChannels := int(f.NumChannels)
-	data, _ := r.readData()
-	all, _ := ioutil.ReadAll(data)
-	return float64(len(all)) / float64(sampleRate*numChannels*bitsPerSample/8)
-}
-func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
-	format, err := r.Format()
-	if err != nil {
-		return
-	}
 
-	blockAlign := int(format.BlockAlign)
-	bitsPerSample := int(format.BitsPerSample)
-
-	data, _ := r.readData()
-	all, _ := ioutil.ReadAll(data)
-	fmt.Println("len all", len(all), "/ ba", len(all)/blockAlign)
-	samples = make([]Sample, len(all)/blockAlign)
+	fmt.Println("len all", len(meta.Data), "/ ba", len(meta.Data)/blockAlign)
+	samples = make([]Sample, len(meta.Data)/blockAlign)
 	offset := 0
 	j := 0
 	for i := 0; i < len(samples); i++ {
@@ -50,83 +33,10 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 		var val uint
 		for b := 0; b*8 < bitsPerSample; b++ {
 			//fmt.Println(soffset + b)
-			val += uint(all[soffset+b]) << uint(b*8)
+			val += uint(meta.Data[soffset+b]) << uint(b*8)
 		}
 
 		samples[i].Values[j] = toInt(val, bitsPerSample)
-		offset += blockAlign
-	}
-
-	return
-}
-func (r *Reader) OldReadSamples(params ...uint32) (samples []Sample, err error) {
-	var bytes []byte
-	var numSamples, b, n int
-
-	if len(params) > 0 {
-		numSamples = int(params[0])
-	} else {
-		numSamples = 2048
-	}
-
-	format, err := r.Format()
-	if err != nil {
-		return
-	}
-
-	numChannels := int(format.NumChannels)
-	blockAlign := int(format.BlockAlign)
-	bitsPerSample := int(format.BitsPerSample)
-
-	fmt.Printf("numChannels: %d\n", numChannels)
-	fmt.Printf("blockAlign: %d\n", blockAlign)
-	fmt.Printf("bitsPerSample: %d\n", bitsPerSample)
-
-	bytes = make([]byte, numSamples*blockAlign)
-	n, err = r.Read(bytes)
-
-	if err != nil {
-		return
-	}
-
-	numSamples = n / blockAlign
-	fmt.Printf("i read %d bytes.\n", n)
-	fmt.Printf("%d / 2 = %d \n", n, n/2)
-	fmt.Printf("pos: %d\n", r.WavData.pos)
-	r.WavData.pos += uint32(numSamples * blockAlign)
-	fmt.Printf("pos: %d\n", r.WavData.pos)
-	samples = make([]Sample, numSamples)
-	offset := 0
-
-	for i := 0; i < numSamples; i++ {
-		//fmt.Printf("i: %d\n", i)
-		if format.AudioFormat == AudioFormatIEEEFloat {
-			for j := 0; j < numChannels; j++ {
-				soffset := offset + (j * bitsPerSample / 8)
-
-				bits :=
-					uint32((int(bytes[soffset+3]) << 24) +
-						(int(bytes[soffset+2]) << 16) +
-						(int(bytes[soffset+1]) << 8) +
-						int(bytes[soffset]))
-				samples[i].Values[j] = int(math.MaxInt32 * math.Float32frombits(bits))
-			}
-		} else {
-			for j := 0; j < numChannels; j++ {
-				soffset := offset + (j * bitsPerSample / 8)
-				//fmt.Printf("offset, j, j * bitsPerSample, f: %v, %v, %v, %v\n",
-				//offset, j, bitsPerSample/8, j*bitsPerSample/8)
-
-				var val uint
-				for b = 0; b*8 < bitsPerSample; b++ {
-					val += uint(bytes[soffset+b]) << uint(b*8)
-					//fmt.Printf("b: %v %v\n", b, val)
-				}
-
-				samples[i].Values[j] = toInt(val, bitsPerSample)
-			}
-		}
-
 		offset += blockAlign
 	}
 
@@ -144,18 +54,16 @@ func findChunk(riffChunk *RIFFChunk, id string) (chunk *Chunk) {
 	return
 }
 
-func (r *Reader) Format() (format *WavFormat, err error) {
-	if r.format == nil {
-		format, err = r.readFormat()
-		if err != nil {
-			return
-		}
-		r.format = format
-	} else {
-		format = r.format
-	}
-
-	return
+func (r *Reader) Format() (*WavFormat, *WavMeta) {
+	f, _ := r.readFormat()
+	sampleRate := int(f.SampleRate)
+	bitsPerSample := int(f.BitsPerSample)
+	numChannels := int(f.NumChannels)
+	data, _ := r.readData()
+	meta := WavMeta{}
+	meta.Data, _ = ioutil.ReadAll(data)
+	meta.Duration = float64(len(meta.Data)) / float64(sampleRate*numChannels*bitsPerSample/8)
+	return f, &meta
 }
 
 func (r *Reader) readFormat() (wfmt *WavFormat, err error) {
@@ -232,6 +140,6 @@ func (r *Reader) IntValue(sample Sample, channel uint) int {
 	return sample.Values[channel]
 }
 
-func (r *Reader) FloatValue(sample Sample, channel uint) float32 {
-	return float32(float64(r.IntValue(sample, channel)) / math.Pow(2, float64(r.format.BitsPerSample)))
+func (r *Reader) FloatValue(f *WavFormat, sample Sample, channel uint) float32 {
+	return float32(float64(r.IntValue(sample, channel)) / math.Pow(2, float64(f.BitsPerSample)))
 }

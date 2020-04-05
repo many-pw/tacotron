@@ -17,6 +17,10 @@ type WavFormat struct {
 	BlockAlign    uint16
 	BitsPerSample uint16
 }
+type WavMeta struct {
+	Duration float64
+	Data     []byte
+}
 
 type WavData struct {
 	io.Reader
