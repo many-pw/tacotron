@@ -19,6 +19,16 @@ func NewReader(r RIFFReader) *Reader {
 	return &Reader{rr: riffReader}
 }
 
+// duration := time.Duration((float64(p.Size) / float64(p.AvgBytesPerSec)) * float64(time.Second))
+//SampleRate * NumChannels * BitsPerSample/8
+func (r *Reader) Duration(f *WavFormat) float64 {
+	sampleRate := int(f.SampleRate)
+	bitsPerSample := int(f.BitsPerSample)
+	numChannels := int(f.NumChannels)
+	data, _ := r.readData()
+	all, _ := ioutil.ReadAll(data)
+	return float64(len(all)) / float64(sampleRate*numChannels*bitsPerSample/8)
+}
 func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 	format, err := r.Format()
 	if err != nil {

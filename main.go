@@ -22,6 +22,8 @@ func main() {
 	}
 	reader := wav.NewReader(file)
 	f, _ := reader.Format()
+	seconds := reader.Duration(f)
+	fmt.Println("duration", seconds)
 	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
 	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
 	fmt.Println("BitsPerSample", f.BitsPerSample)
