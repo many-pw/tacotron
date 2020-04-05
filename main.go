@@ -20,14 +20,32 @@ func main() {
 	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
 	fmt.Println("BitsPerSample", f.BitsPerSample)
 	samples, _ := reader.ReadSamples()
-	peak := float64(0.0)
+	peak := float64(-1.0)
+	low := float64(1.0)
+	dir := ""
+	prevVal := 0.0
+	count := 0
 	for _, cur := range samples {
 		//fmt.Println(cur)
-		val := 1.0 * reader.FloatValue(cur, 0)
+		val := float64(1.0 * reader.FloatValue(cur, 0))
+		if val > prevVal && dir != "up" {
+			dir = "up"
+			count = 0
+		} else if val < prevVal && dir != "down" {
+			dir = "down"
+			count = 0
+		} else {
+			count += 1
+			fmt.Println("dir is", dir, count)
+		}
+		prevVal = val
+		if val < low {
+			low = val
+		}
 		absVal := math.Abs(float64(val))
 		if absVal > peak {
 			peak = absVal
 		}
 	}
-	fmt.Println(peak)
+	fmt.Println(peak, low)
 }
