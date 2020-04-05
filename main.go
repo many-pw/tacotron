@@ -1,6 +1,6 @@
 package main
 
-import "github.com/go-audio/wav"
+import wave "github.com/zenwerk/go-wave"
 import "os"
 import "fmt"
 
@@ -9,12 +9,11 @@ func main() {
 		fmt.Println("enter file")
 		return
 	}
-	file, err := os.Open(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
+	waveReader, _ := wave.NewReader(os.Args[1])
+	for {
+		framesPerBuffer, _ := waveReader.ReadRawSample()
 
-	d := wav.NewDecoder(file)
-	dd, e := d.Duration()
-	fmt.Println(d.Format(), dd, e)
+		fmt.Println(framesPerBuffer[0],
+			waveReader.NumSamples, waveReader.ReadSampleNum)
+	}
 }
