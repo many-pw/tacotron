@@ -3,8 +3,11 @@ package main
 import "os"
 import "math"
 import "fmt"
+import "time"
 import "sort"
+import "math/rand"
 import "github.com/many-pw/tacotron/wav"
+import "github.com/gordonklaus/portaudio"
 
 type Thing struct {
 	Count int
@@ -12,8 +15,27 @@ type Thing struct {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+	portaudio.Initialize()
 	if len(os.Args) == 1 {
-		fmt.Println("enter file")
+		fmt.Println("enter 1st param")
+		return
+	}
+	if os.Args[1] == "play" {
+		stream, err := portaudio.OpenDefaultStream(0, 1, 44100, 512, callback)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(stream)
+
+		go func() {
+			stream.Start()
+		}()
+
+		for {
+			time.Sleep(1)
+		}
 		return
 	}
 	file, err := os.Open(os.Args[1])
@@ -72,4 +94,22 @@ func main() {
 			break
 		}
 	}
+}
+
+var global int
+
+func callback(_, out []float32) {
+	fmt.Println(1, len(out))
+	for i := 0; i < 512; i++ {
+		if global > 10 {
+			out[i] = 0.99
+		} else {
+			out[i] = 0
+		}
+		fmt.Println(out[i])
+	}
+	if global == 11 {
+		global = 0
+	}
+	global++
 }
