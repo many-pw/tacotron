@@ -14,6 +14,8 @@ type Thing struct {
 	Name  int
 }
 
+var speaker = make(chan float64, 1024)
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	portaudio.Initialize()
@@ -21,22 +23,13 @@ func main() {
 		fmt.Println("enter 1st param")
 		return
 	}
-	if os.Args[1] == "play" {
-		stream, err := portaudio.OpenDefaultStream(0, 1, 44100, 512, callback)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(stream)
-
-		go func() {
-			stream.Start()
-		}()
-
-		for {
-			time.Sleep(1)
-		}
+	stream, err := portaudio.OpenDefaultStream(0, 1, 44100, 512, callback)
+	if err != nil {
+		fmt.Println(err)
 		return
+	}
+	fmt.Println(stream)
+	if os.Args[1] == "play" {
 	}
 	file, err := os.Open(os.Args[1])
 	if err != nil {
@@ -56,9 +49,13 @@ func main() {
 	prevVal := 0.0
 	count := 0
 	counts := map[int]int{}
+	go func() {
+		stream.Start()
+	}()
 	for i, cur := range samples {
 		//fmt.Println(cur)
 		val := float64(1.0 * reader.FloatValue(f, cur, 0))
+		speaker <- val
 		if val > prevVal && dir != "up" {
 			dir = "up"
 			count = 0
@@ -88,28 +85,26 @@ func main() {
 	sort.Slice(things, func(i, j int) bool {
 		return things[i].Count > things[j].Count
 	})
-	for i, thing := range things {
-		fmt.Println(thing.Count, thing.Name)
-		if i > 10000 {
+	for i, _ := range things {
+		//fmt.Println(thing.Count, thing.Name)
+		if i > 10 {
 			break
 		}
 	}
+	time.Sleep(time.Second * 100)
 }
 
-var global int
-
 func callback(_, out []float32) {
-	fmt.Println(1, len(out))
-	for i := 0; i < 512; i++ {
-		if global > 10 {
-			out[i] = 0.99
-		} else {
-			out[i] = 0
+
+	getsome := []float32{}
+	for val := range speaker {
+		getsome = append(getsome, float32(val))
+		if len(getsome) == 512 {
+			break
 		}
-		fmt.Println(out[i])
 	}
-	if global == 11 {
-		global = 0
+
+	for i := 0; i < 512; i++ {
+		out[i] = getsome[i]
 	}
-	global++
 }
