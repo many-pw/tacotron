@@ -36,7 +36,7 @@ func main() {
 			count = 0
 		} else {
 			count += 1
-			fmt.Println("dir is", dir, count)
+			fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
 		}
 		prevVal = val
 		if val < low {
