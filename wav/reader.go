@@ -25,18 +25,13 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 		return
 	}
 
-	//numSamples := 22050
 	blockAlign := int(format.BlockAlign)
 	bitsPerSample := int(format.BitsPerSample)
 
-	fmt.Printf("blockAlign: %d\n", blockAlign)
-	fmt.Printf("bitsPerSample: %d\n", bitsPerSample)
-
 	data, _ := r.readData()
-	fmt.Println(data)
 	all, _ := ioutil.ReadAll(data)
-	fmt.Println(len(all))
-	samples = make([]Sample, len(all)/2)
+	fmt.Println("len all", len(all), "/ ba", len(all)/blockAlign)
+	samples = make([]Sample, len(all)/blockAlign)
 	offset := 0
 	j := 0
 	for i := 0; i < len(samples); i++ {
@@ -44,6 +39,7 @@ func (r *Reader) ReadSamples(params ...uint32) (samples []Sample, err error) {
 
 		var val uint
 		for b := 0; b*8 < bitsPerSample; b++ {
+			//fmt.Println(soffset + b)
 			val += uint(all[soffset+b]) << uint(b*8)
 		}
 
