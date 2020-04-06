@@ -42,9 +42,8 @@ func main() {
 			if command == "" {
 				globalPause = !globalPause
 			} else if command == "-" {
-				globalIndex -= globalBreak
-				globalIndex -= globalBreak
-				globalIndex -= globalBreak
+				globalIndex -= globalBreak * 3
+				gc -= 3
 			}
 			if globalPause {
 				stream.Stop()
@@ -134,16 +133,12 @@ func process1sec(id int, items []float32) {
 	}
 }
 
-/*
-func oldCallback(_, out []float32) {
+func callback(_, out []float32) {
 
-	getsome := []float32{}
-	for val := range speaker {
-		getsome = append(getsome, float32(val))
-		if len(getsome) >= global512 {
-			break
-		}
+	for i, item := range globalWav[globalIndex : globalIndex+global512] {
+		out[i] = float32(item)
 	}
+	globalIndex += global512
 
 	if globalCount*global512 > globalBreak {
 		fmt.Println("--- next ---", gc, len(globalLast))
@@ -153,16 +148,6 @@ func oldCallback(_, out []float32) {
 		gc += 1
 	}
 
-	for i := 0; i < global512; i++ {
-		out[i] = getsome[i]
-	}
 	globalCount += 1
-	globalLast = append(globalLast, getsome...)
-}*/
-func callback(_, out []float32) {
-
-	for i, item := range globalWav[globalIndex : globalIndex+global512] {
-		out[i] = float32(item)
-	}
-	globalIndex += global512
+	globalLast = append(globalLast, out...)
 }
