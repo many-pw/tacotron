@@ -46,7 +46,7 @@ func main() {
 	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
 	fmt.Println("BitsPerSample", f.BitsPerSample)
 	samples, _ := reader.ReadSamples(f, meta)
-	globalBreak = int(float64(len(samples))/float64(global512)) * int(f.BlockAlign)
+	globalBreak = int(float64(len(samples))/float64(global512)) * 2 // * int(f.BlockAlign) * int(f.NumChannels)
 	fmt.Println("duration", meta.Duration, blocks, globalBreak)
 	peak := float64(-1.0)
 	low := float64(1.0)
@@ -106,6 +106,7 @@ func main() {
 
 var globalCount = 0
 var gc = 0
+var globalLast = []float32{}
 
 func callback(_, out []float32) {
 
@@ -118,8 +119,9 @@ func callback(_, out []float32) {
 	}
 
 	if globalCount*global512 > globalBreak {
-		fmt.Println("--- next ---", gc)
+		fmt.Println("--- next ---", gc, globalLast[0], globalLast[len(globalLast)-1])
 		globalCount = 0
+		globalLast = []float32{}
 		gc += 1
 	}
 
@@ -127,4 +129,5 @@ func callback(_, out []float32) {
 		out[i] = getsome[i]
 	}
 	globalCount += 1
+	globalLast = append(globalLast, getsome...)
 }
