@@ -2,6 +2,7 @@ package main
 
 import "os"
 import "math"
+import "strings"
 import "bufio"
 import "fmt"
 import "time"
@@ -36,10 +37,14 @@ func main() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
 			command, _ := reader.ReadString('\n')
+			command = strings.TrimSpace(command)
+			fmt.Println(command)
 			if command == "" {
 				globalPause = !globalPause
 			} else if command == "-" {
-
+				globalIndex -= globalBreak
+				globalIndex -= globalBreak
+				globalIndex -= globalBreak
 			}
 			if globalPause {
 				stream.Stop()
