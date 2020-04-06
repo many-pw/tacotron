@@ -15,7 +15,9 @@ type Thing struct {
 	Name  int
 }
 
-var speaker = make(chan float64, 1024*10)
+//var speaker = make(chan float64, 1024*10)
+var globalWav = []float64{}
+var globalIndex = 0
 
 var global512 = 512
 var globalBreak = 0
@@ -33,8 +35,12 @@ func main() {
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
-			reader.ReadString('\n')
-			globalPause = !globalPause
+			command, _ := reader.ReadString('\n')
+			if command == "" {
+				globalPause = !globalPause
+			} else if command == "-" {
+
+			}
 			if globalPause {
 				stream.Stop()
 			} else {
@@ -59,14 +65,12 @@ func main() {
 	fmt.Println("duration", meta.Duration, blocks, globalBreak)
 	peak := float64(-1.0)
 	low := float64(1.0)
-	go func() {
-		stream.Start()
-	}()
 	for i, cur := range samples {
 		//fmt.Println(cur)
 		val := float64(4.0 * reader.FloatValue(f, cur, 0))
 		//if rand.Intn(100) > 8 {
-		speaker <- val
+		//speaker <- val
+		globalWav = append(globalWav, val)
 		//speaker <- val
 		//}
 		if val < low {
@@ -80,6 +84,9 @@ func main() {
 		}
 	}
 	fmt.Println(peak, low)
+	go func() {
+		stream.Start()
+	}()
 	time.Sleep(time.Second * 100)
 }
 
@@ -121,7 +128,9 @@ func process1sec(id int, items []float32) {
 		}
 	}
 }
-func callback(_, out []float32) {
+
+/*
+func oldCallback(_, out []float32) {
 
 	getsome := []float32{}
 	for val := range speaker {
@@ -144,4 +153,11 @@ func callback(_, out []float32) {
 	}
 	globalCount += 1
 	globalLast = append(globalLast, getsome...)
+}*/
+func callback(_, out []float32) {
+
+	for i, item := range globalWav[globalIndex : globalIndex+global512] {
+		out[i] = float32(item)
+	}
+	globalIndex += global512
 }
