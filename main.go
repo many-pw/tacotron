@@ -50,10 +50,6 @@ func main() {
 	fmt.Println("duration", meta.Duration, blocks, globalBreak)
 	peak := float64(-1.0)
 	low := float64(1.0)
-	dir := ""
-	prevVal := 0.0
-	count := 0
-	counts := map[int]int{}
 	go func() {
 		stream.Start()
 	}()
@@ -64,18 +60,6 @@ func main() {
 		speaker <- val
 		//speaker <- val
 		//}
-		if val > prevVal && dir != "up" {
-			dir = "up"
-			count = 0
-		} else if val < prevVal && dir != "down" {
-			dir = "down"
-			count = 0
-		} else {
-			count += 1
-			//fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
-			counts[i] = count
-		}
-		prevVal = val
 		if val < low {
 			low = val
 		}
@@ -87,26 +71,16 @@ func main() {
 		}
 	}
 	fmt.Println(peak, low)
-	things := []Thing{}
-	for k, v := range counts {
-		thing := Thing{v, k}
-		things = append(things, thing)
-	}
-	sort.Slice(things, func(i, j int) bool {
-		return things[i].Count > things[j].Count
-	})
-	for i, _ := range things {
-		//fmt.Println(thing.Count, thing.Name)
-		if i > 10 {
-			break
-		}
-	}
 	time.Sleep(time.Second * 100)
 }
 
 var globalCount = 0
 var gc = 0
 var globalLast = []float32{}
+var highsLows = map[int]int{}
+var dir = ""
+var prevVal = float32(0.0)
+var highLowCount = 0
 
 func callback(_, out []float32) {
 
@@ -119,7 +93,35 @@ func callback(_, out []float32) {
 	}
 
 	if globalCount*global512 > globalBreak {
-		fmt.Println("--- next ---", gc, globalLast[0], globalLast[len(globalLast)-1])
+		fmt.Println("--- next ---", gc, len(globalLast))
+		for i, val := range globalLast {
+			if val > prevVal && dir != "up" {
+				dir = "up"
+				highLowCount = 0
+			} else if val < prevVal && dir != "down" {
+				dir = "down"
+				highLowCount = 0
+			} else {
+				highLowCount += 1
+				//fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
+				highsLows[i] = highLowCount
+			}
+			prevVal = val
+		}
+		things := []Thing{}
+		for k, v := range highsLows {
+			thing := Thing{v, k}
+			things = append(things, thing)
+		}
+		sort.Slice(things, func(i, j int) bool {
+			return things[i].Count > things[j].Count
+		})
+		for i, thing := range things {
+			fmt.Println(thing.Count, thing.Name)
+			if i > 10 {
+				break
+			}
+		}
 		globalCount = 0
 		globalLast = []float32{}
 		gc += 1
