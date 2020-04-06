@@ -16,6 +16,8 @@ type Thing struct {
 
 var speaker = make(chan float64, 1024)
 
+var global512 = 512
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	portaudio.Initialize()
@@ -23,7 +25,7 @@ func main() {
 		fmt.Println("enter 1st param")
 		return
 	}
-	stream, err := portaudio.OpenDefaultStream(0, 1, 44100, 512, callback)
+	stream, err := portaudio.OpenDefaultStream(0, 1, 44100, global512, callback)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -37,7 +39,8 @@ func main() {
 	}
 	reader := wav.NewReader(file)
 	f, meta := reader.Format()
-	fmt.Println("duration", meta.Duration)
+	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
+	fmt.Println("duration", meta.Duration, blocks)
 
 	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
 	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
@@ -54,8 +57,11 @@ func main() {
 	}()
 	for i, cur := range samples {
 		//fmt.Println(cur)
-		val := float64(1.0 * reader.FloatValue(f, cur, 0))
+		val := float64(4.0 * reader.FloatValue(f, cur, 0))
+		//if rand.Intn(100) > 8 {
 		speaker <- val
+		//speaker <- val
+		//}
 		if val > prevVal && dir != "up" {
 			dir = "up"
 			count = 0
@@ -74,6 +80,9 @@ func main() {
 		absVal := math.Abs(float64(val))
 		if absVal > peak {
 			peak = absVal
+		}
+		if i > int(blocks) {
+			break
 		}
 	}
 	fmt.Println(peak, low)
@@ -99,12 +108,13 @@ func callback(_, out []float32) {
 	getsome := []float32{}
 	for val := range speaker {
 		getsome = append(getsome, float32(val))
-		if len(getsome) == 512 {
+		if len(getsome) >= global512 {
 			break
 		}
 	}
 
-	for i := 0; i < 512; i++ {
+	for i := 0; i < global512; i++ {
 		out[i] = getsome[i]
 	}
+	//time.Sleep(time.Nanosecond * 15000000)
 }
