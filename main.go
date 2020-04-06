@@ -17,6 +17,7 @@ type Thing struct {
 var speaker = make(chan float64, 1024)
 
 var global512 = 512
+var globalBreak = 0
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -40,12 +41,13 @@ func main() {
 	reader := wav.NewReader(file)
 	f, meta := reader.Format()
 	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
-	fmt.Println("duration", meta.Duration, blocks)
 
 	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
 	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
 	fmt.Println("BitsPerSample", f.BitsPerSample)
 	samples, _ := reader.ReadSamples(f, meta)
+	globalBreak = int(float64(len(samples))/float64(global512)) * int(f.BlockAlign)
+	fmt.Println("duration", meta.Duration, blocks, globalBreak)
 	peak := float64(-1.0)
 	low := float64(1.0)
 	dir := ""
@@ -82,7 +84,6 @@ func main() {
 			peak = absVal
 		}
 		if i > int(blocks) {
-			break
 		}
 	}
 	fmt.Println(peak, low)
@@ -103,6 +104,9 @@ func main() {
 	time.Sleep(time.Second * 100)
 }
 
+var globalCount = 0
+var gc = 0
+
 func callback(_, out []float32) {
 
 	getsome := []float32{}
@@ -113,8 +117,14 @@ func callback(_, out []float32) {
 		}
 	}
 
+	if globalCount*global512 > globalBreak {
+		fmt.Println("--- next ---", gc)
+		globalCount = 0
+		gc += 1
+	}
+
 	for i := 0; i < global512; i++ {
 		out[i] = getsome[i]
 	}
-	//time.Sleep(time.Nanosecond * 15000000)
+	globalCount += 1
 }
