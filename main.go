@@ -100,6 +100,8 @@ var globalLast = []float32{}
 
 func process1sec(id int, items []float32) {
 	var highsLows = map[int]int{}
+	var highsLowsSums = map[int]float32{}
+	var highsLowsSum float32
 	var dir = ""
 	var prevVal = float32(0.0)
 	var highLowCount = 0
@@ -107,13 +109,17 @@ func process1sec(id int, items []float32) {
 		if val > prevVal && dir != "up" {
 			dir = "up"
 			highLowCount = 0
+			highsLowsSums[i] = highsLowsSum
+			highsLowsSum = 0
 		} else if val < prevVal && dir != "down" {
 			dir = "down"
 			highLowCount = 0
+			highsLowsSums[i] = highsLowsSum
+			highsLowsSum = 0
 		} else {
 			highLowCount += 1
-			//fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
 			highsLows[i] = highLowCount
+			highsLowsSum += val
 		}
 		prevVal = val
 	}
@@ -126,8 +132,9 @@ func process1sec(id int, items []float32) {
 		return things[i].Count > things[j].Count
 	})
 	for i, thing := range things {
-		fmt.Println(id, thing.Count, thing.Name)
-		if i > 10 {
+		fmt.Printf("%v %v %v %0.4f\n", id, thing.Count, thing.Name,
+			highsLowsSums[i]/float32(thing.Count))
+		if i > 100 {
 			break
 		}
 	}
