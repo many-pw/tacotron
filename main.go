@@ -2,6 +2,7 @@ package main
 
 import "os"
 import "math"
+import "bufio"
 import "fmt"
 import "time"
 import "sort"
@@ -14,10 +15,12 @@ type Thing struct {
 	Name  int
 }
 
-var speaker = make(chan float64, 1024)
+var speaker = make(chan float64, 1024*10)
 
 var global512 = 512
 var globalBreak = 0
+var globalPause = false
+var stream *portaudio.Stream
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -26,14 +29,20 @@ func main() {
 		fmt.Println("enter 1st param")
 		return
 	}
-	stream, err := portaudio.OpenDefaultStream(0, 1, 44100, global512, callback)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(stream)
-	if os.Args[1] == "play" {
-	}
+	stream, _ = portaudio.OpenDefaultStream(0, 1, 44100, global512, callback)
+	go func() {
+		for {
+			reader := bufio.NewReader(os.Stdin)
+			reader.ReadString('\n')
+			globalPause = !globalPause
+			if globalPause {
+				stream.Stop()
+			} else {
+				stream.Start()
+			}
+		}
+	}()
+
 	file, err := os.Open(os.Args[1])
 	if err != nil {
 		panic(err)
@@ -77,11 +86,41 @@ func main() {
 var globalCount = 0
 var gc = 0
 var globalLast = []float32{}
-var highsLows = map[int]int{}
-var dir = ""
-var prevVal = float32(0.0)
-var highLowCount = 0
 
+func process1sec(id int, items []float32) {
+	var highsLows = map[int]int{}
+	var dir = ""
+	var prevVal = float32(0.0)
+	var highLowCount = 0
+	for i, val := range items {
+		if val > prevVal && dir != "up" {
+			dir = "up"
+			highLowCount = 0
+		} else if val < prevVal && dir != "down" {
+			dir = "down"
+			highLowCount = 0
+		} else {
+			highLowCount += 1
+			//fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
+			highsLows[i] = highLowCount
+		}
+		prevVal = val
+	}
+	things := []Thing{}
+	for k, v := range highsLows {
+		thing := Thing{v, k}
+		things = append(things, thing)
+	}
+	sort.Slice(things, func(i, j int) bool {
+		return things[i].Count > things[j].Count
+	})
+	for i, thing := range things {
+		fmt.Println(id, thing.Count, thing.Name)
+		if i > 10 {
+			break
+		}
+	}
+}
 func callback(_, out []float32) {
 
 	getsome := []float32{}
@@ -94,34 +133,7 @@ func callback(_, out []float32) {
 
 	if globalCount*global512 > globalBreak {
 		fmt.Println("--- next ---", gc, len(globalLast))
-		for i, val := range globalLast {
-			if val > prevVal && dir != "up" {
-				dir = "up"
-				highLowCount = 0
-			} else if val < prevVal && dir != "down" {
-				dir = "down"
-				highLowCount = 0
-			} else {
-				highLowCount += 1
-				//fmt.Printf("dir is %s %d %.4f\n", dir, count, val)
-				highsLows[i] = highLowCount
-			}
-			prevVal = val
-		}
-		things := []Thing{}
-		for k, v := range highsLows {
-			thing := Thing{v, k}
-			things = append(things, thing)
-		}
-		sort.Slice(things, func(i, j int) bool {
-			return things[i].Count > things[j].Count
-		})
-		for i, thing := range things {
-			fmt.Println(thing.Count, thing.Name)
-			if i > 10 {
-				break
-			}
-		}
+		go process1sec(gc, append([]float32{}, globalLast...))
 		globalCount = 0
 		globalLast = []float32{}
 		gc += 1
