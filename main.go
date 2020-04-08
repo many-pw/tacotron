@@ -98,7 +98,11 @@ func plot(second int, items []float64) {
 
 	twoD := drawfft(items)
 	for _, ca := range twoD {
-		data = append(data, cmplx.Abs(ca[0]))
+		sum := float64(0)
+		for _, c := range ca {
+			sum += cmplx.Abs(c)
+		}
+		data = append(data, sum/float64(len(ca)))
 	}
 
 	if len(data) > 0 {
