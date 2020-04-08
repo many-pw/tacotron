@@ -69,8 +69,21 @@ func main() {
 		if i > int(blocks) {
 		}
 	}
-	data := globalWav[9999+offset : 10070+offset]
-	fmt.Println(peak, low)
+	fmt.Println(offset, peak, low)
+	data := []float64{}
+	x := 0
+	y := len(globalWav) - 1
+
+	x = (len(globalWav) / 2) / 2
+	y = len(globalWav) - x - 1
+
+	x = (len(globalWav) / 8) / 2
+	y = len(globalWav) - x - 1
+	for i, item := range globalWav[x:y] {
+		if i%(len(globalWav[x:y])/75) == 0 {
+			data = append(data, item)
+		}
+	}
 	graph := asciigraph.Plot(data)
 
 	fmt.Println(graph)
