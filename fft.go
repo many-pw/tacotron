@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/cmplx"
 )
@@ -69,7 +68,7 @@ func drawfft(samples []float64) [][]complex128 {
 		n1 := int64(mapRange(float64(x-0), 0, float64(max), 0, float64(len(samples))))
 		// a 0 2968
 		c := n0 + (n1-n0)/2
-		fmt.Println("a", n0, n1, c)
+		//fmt.Println("a", n0, n1, c)
 		sub := make([]float64, bins*2)
 		for i := 0; i < len(sub); i += 1 {
 			s := 0.0
@@ -95,6 +94,7 @@ func drawfft(samples []float64) [][]complex128 {
 		} else {
 			freqs = fft(sub)
 		}
+		items = append(items, freqs)
 		max := 0.0
 		for y := 0; y < int(bins); y++ {
 			c := freqs[y]

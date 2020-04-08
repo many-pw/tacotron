@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/cmplx"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -32,8 +33,6 @@ var globalPause = false
 var stream *portaudio.Stream
 
 func main() {
-	/* A complex number is a number that can be expressed in the form a + bi, where a and b are real numbers, and i is a solution of the equation x2 = −1.
-	 */
 	rand.Seed(time.Now().UnixNano())
 
 	file, err := os.Open(os.Args[1])
@@ -88,7 +87,6 @@ func main() {
 	fmt.Println("remaining", bCounter)
 	go startAudio(int(f.SampleRate))
 
-	fmt.Println(len(globalWav))
 	for i := 0; i < len(globalWav); i++ {
 		plot(i, globalWav[i])
 	}
@@ -96,23 +94,18 @@ func main() {
 }
 
 func plot(second int, items []float64) {
-
 	data := []float64{}
-	x := 0
-	y := len(items) - 1
 
-	val := float64(0)
-	for i, item := range items[x:y] {
-		if i%(len(items[x:y])/75) == 0 {
-			data = append(data, val/float64(len(items[x:y])/75))
-			val = 0
-		} else {
-			val += item
-		}
+	twoD := drawfft(items)
+	for _, ca := range twoD {
+		data = append(data, cmplx.Abs(ca[0]))
 	}
-	graph := asciigraph.Plot(data)
-	fmt.Println(second)
-	fmt.Println(graph)
+
+	if len(data) > 0 {
+		graph := asciigraph.Plot(data)
+		fmt.Println(second)
+		fmt.Println(graph)
+	}
 }
 
 func waitForSignal() os.Signal {
@@ -150,58 +143,7 @@ func startAudio(sr int) {
 	stream.Start()
 }
 
-func process1sec(id int, items []float32) {
-	/*
-			for i, thing := range things {
-				fmt.Printf("%v %v %v %0.4f\n", id, thing.Count, thing.Name,
-				highsLowsSums[i]/float32(thing.Count))
-				if i > 100 {
-					break
-				}
-			}
-		var highsLows = map[int]int{}
-		var highsLowsSums = map[int]float32{}
-		var highsLowsSum float32
-		var dir = ""
-		var prevVal = float32(0.0)
-		var highLowCount = 0
-		for i, val := range items {
-			if val > prevVal && dir != "up" {
-				dir = "up"
-				highLowCount = 0
-				highsLowsSums[i] = highsLowsSum
-				highsLowsSum = 0
-			} else if val < prevVal && dir != "down" {
-				dir = "down"
-				highLowCount = 0
-				highsLowsSums[i] = highsLowsSum
-				highsLowsSum = 0
-			} else {
-				highLowCount += 1
-				highsLows[i] = highLowCount
-				highsLowsSum += val
-			}
-			prevVal = val
-		}
-		things := []Thing{}
-		for k, v := range highsLows {
-			thing := Thing{v, k}
-			things = append(things, thing)
-		}
-		sort.Slice(things, func(i, j int) bool {
-			return things[i].Count > things[j].Count
-		})
-	*/
-	data := []float64{}
-
-	for i, item := range items {
-		if i%(len(items)/75) == 0 {
-			data = append(data, float64(item))
-		}
-	}
-	graph := asciigraph.Plot(data)
-
-	fmt.Println(graph)
+func process1sec(id int, items []float64) {
 	fmt.Println(gc, gc*globalBreak)
 }
 
