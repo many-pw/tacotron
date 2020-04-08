@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -45,6 +44,7 @@ func main() {
 	fmt.Println("")
 	fmt.Printf("%20s: %d\n", "Sample Rate", f.SampleRate)
 	fmt.Printf("%20s: %d\n", "Samples", len(samples))
+	fmt.Printf("%20s: %d\n", "Samples", len(samples)*int(f.BitsPerSample))
 	fmt.Printf("%20s: %d\n", "Channels", f.NumChannels)
 	fmt.Printf("%20s: %d\n", "BlockAlign", f.BlockAlign)
 	fmt.Printf("%20s: %d\n", "ByteRate", f.ByteRate)
@@ -53,6 +53,21 @@ func main() {
 	fmt.Printf("%20s: %d\n", "BitsPerSample", f.BitsPerSample)
 	fmt.Printf("%20s: %f\n", "Duration", meta.Duration)
 	fmt.Println("")
+	bCounter := 0
+	for _, cur := range samples {
+		val1 := float64(1.0 * reader.FloatValue(f, cur, 0))
+		if f.NumChannels == 2 {
+			//val2 := float64(1.0 * reader.FloatValue(f, cur, 1))
+		}
+		globalWav = append(globalWav, val1)
+
+		bCounter += int(f.BitsPerSample)
+		if bCounter/1000 >= int(f.ByteRate/125) {
+			fmt.Println(bCounter)
+			bCounter = 0
+		}
+	}
+	fmt.Println(bCounter)
 }
 
 func omain() {
@@ -73,27 +88,19 @@ func omain() {
 	samples, _ := reader.ReadSamples(f, meta)
 	globalBreak = int(float64(len(samples))/float64(global512)) * 2 // * int(f.BlockAlign) * int(f.NumChannels)
 	fmt.Println("duration", meta.Duration, blocks, globalBreak)
-	peak := float64(-1.0)
-	low := float64(1.0)
-	for i, cur := range samples {
+	for _, cur := range samples {
 		//fmt.Println(cur)
-		val := float64(1.0 * reader.FloatValue(f, cur, 0))
+		val1 := float64(1.0 * reader.FloatValue(f, cur, 0))
+		if f.NumChannels == 2 {
+			//val2 := float64(1.0 * reader.FloatValue(f, cur, 1))
+		}
 		//if rand.Intn(100) > 8 {
 		//speaker <- val
-		globalWav = append(globalWav, val)
+		globalWav = append(globalWav, val1)
 		//speaker <- val
 		//}
-		if val < low {
-			low = val
-		}
-		absVal := math.Abs(float64(val))
-		if absVal > peak {
-			peak = absVal
-		}
-		if i > int(blocks) {
-		}
 	}
-	fmt.Println(offset, peak, low)
+	fmt.Println(offset)
 	data := []float64{}
 	x := 0
 	y := len(globalWav) - 1

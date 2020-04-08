@@ -36,6 +36,9 @@ func (r *Reader) ReadSamples(f *WavFormat, meta *WavMeta) (samples []Sample, err
 			val1 += uint(meta.Data[soffset+b]) << uint(b*8)
 		}
 
+		// 16 byte byte           //      byte byte | byte byte
+		// 24 byte byte byte      // byte byte byte | byte byte byte
+
 		samples[i].Values[0] = toInt(val1, bitsPerSample)
 
 		var val2 uint
