@@ -56,6 +56,18 @@ func main() {
 	fmt.Println("")
 	bCounter := 0
 	second := 0
+	for range samples {
+		bCounter += int(f.BitsPerSample)
+		if bCounter/1000 >= int(f.ByteRate/125) {
+			bCounter = 0
+			second += 1
+		}
+	}
+	factor := 1
+	if second < int(meta.Duration) {
+		factor = 2
+	}
+	second = 0
 	for _, cur := range samples {
 		val1 := float64(1.0 * reader.FloatValue(f, cur, 0))
 		if f.NumChannels == 2 {
@@ -65,32 +77,37 @@ func main() {
 		globalWavArray = append(globalWavArray, val1)
 
 		bCounter += int(f.BitsPerSample)
-		if bCounter/1000 >= int(f.ByteRate/125) {
-			fmt.Println(bCounter)
+		if bCounter/1000 >= int(f.ByteRate/125)/factor {
+			//fmt.Println(bCounter)
 			bCounter = 0
 			second += 1
 		}
 	}
-	fmt.Println(bCounter)
+	fmt.Println("remaining", bCounter)
 	go startAudio(int(f.SampleRate))
+
+	fmt.Println(len(globalWav))
+	for i := 0; i < len(globalWav); i++ {
+		plot(i, globalWav[i])
+	}
 	waitForSignal()
 }
 
-/*
-func omain() {
+func plot(second int, items []float64) {
 
 	data := []float64{}
 	x := 0
-	y := len(globalWav) - 1
+	y := len(items) - 1
 
-	for i, item := range globalWav[x:y] {
-		if i%(len(globalWav[x:y])/75) == 0 {
+	for i, item := range items[x:y] {
+		if i%(len(items[x:y])/75) == 0 {
 			data = append(data, item)
 		}
 	}
 	graph := asciigraph.Plot(data)
+	fmt.Println(second)
 	fmt.Println(graph)
-}*/
+}
 
 func waitForSignal() os.Signal {
 	signalChan := make(chan os.Signal, 1)
