@@ -23,10 +23,10 @@ var globalLast = []float32{}
 
 //var speaker = make(chan float64, 1024*10)
 var globalWav = map[int][]float64{}
+var globalWavArray = []float64{}
 var globalIndex = 0
 
 var global512 = 512
-var globalSecond = 0
 var globalBreak = 0
 var globalPause = false
 var stream *portaudio.Stream
@@ -62,6 +62,7 @@ func main() {
 			//val2 := float64(1.0 * reader.FloatValue(f, cur, 1))
 		}
 		globalWav[second] = append(globalWav[second], val1)
+		globalWavArray = append(globalWavArray, val1)
 
 		bCounter += int(f.BitsPerSample)
 		if bCounter/1000 >= int(f.ByteRate/125) {
@@ -71,7 +72,7 @@ func main() {
 		}
 	}
 	fmt.Println(bCounter)
-	go startAudio()
+	go startAudio(int(f.SampleRate))
 	waitForSignal()
 }
 
@@ -100,9 +101,9 @@ func waitForSignal() os.Signal {
 	return s
 }
 
-func startAudio() {
+func startAudio(sr int) {
 	portaudio.Initialize()
-	stream, _ = portaudio.OpenDefaultStream(0, 1, 44100, global512, callback)
+	stream, _ = portaudio.OpenDefaultStream(0, 1, float64(sr), global512, callback)
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
@@ -124,11 +125,6 @@ func startAudio() {
 	}()
 
 	stream.Start()
-
-	for {
-		time.Sleep(time.Second)
-		globalSecond += 1
-	}
 }
 
 func process1sec(id int, items []float32) {
@@ -188,15 +184,15 @@ func process1sec(id int, items []float32) {
 
 func callback(_, out []float32) {
 
-	if globalIndex+global512 > len(globalWav[globalSecond]) {
+	if globalIndex+global512 >= len(globalWavArray) {
 		for i := 0; i < len(out); i++ {
 			out[i] = 0.0
 		}
 		return
 	}
-	for i, item := range globalWav[globalSecond][globalIndex : globalIndex+global512] {
+	for i, item := range globalWavArray[globalIndex : globalIndex+global512] {
 		out[i] = float32(item)
 	}
-	globalIndex += global512
 
+	globalIndex += global512
 }
