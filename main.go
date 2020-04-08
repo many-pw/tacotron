@@ -32,6 +32,8 @@ var globalPause = false
 var stream *portaudio.Stream
 
 func main() {
+	/* A complex number is a number that can be expressed in the form a + bi, where a and b are real numbers, and i is a solution of the equation x2 = −1.
+	 */
 	rand.Seed(time.Now().UnixNano())
 
 	file, err := os.Open(os.Args[1])
@@ -99,9 +101,13 @@ func plot(second int, items []float64) {
 	x := 0
 	y := len(items) - 1
 
+	val := float64(0)
 	for i, item := range items[x:y] {
 		if i%(len(items[x:y])/75) == 0 {
-			data = append(data, item)
+			data = append(data, val/float64(len(items[x:y])/75))
+			val = 0
+		} else {
+			val += item
 		}
 	}
 	graph := asciigraph.Plot(data)
