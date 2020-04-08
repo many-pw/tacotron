@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 	//	"sort"
-	"strconv"
+	//"strconv"
 	"strings"
 	"time"
 
@@ -22,10 +22,11 @@ var gc = 0
 var globalLast = []float32{}
 
 //var speaker = make(chan float64, 1024*10)
-var globalWav = []float64{}
+var globalWav = map[int][]float64{}
 var globalIndex = 0
 
 var global512 = 512
+var globalSecond = 0
 var globalBreak = 0
 var globalPause = false
 var stream *portaudio.Stream
@@ -54,53 +55,29 @@ func main() {
 	fmt.Printf("%20s: %f\n", "Duration", meta.Duration)
 	fmt.Println("")
 	bCounter := 0
+	second := 0
 	for _, cur := range samples {
 		val1 := float64(1.0 * reader.FloatValue(f, cur, 0))
 		if f.NumChannels == 2 {
 			//val2 := float64(1.0 * reader.FloatValue(f, cur, 1))
 		}
-		globalWav = append(globalWav, val1)
+		globalWav[second] = append(globalWav[second], val1)
 
 		bCounter += int(f.BitsPerSample)
 		if bCounter/1000 >= int(f.ByteRate/125) {
 			fmt.Println(bCounter)
 			bCounter = 0
+			second += 1
 		}
 	}
 	fmt.Println(bCounter)
+	go startAudio()
+	waitForSignal()
 }
 
+/*
 func omain() {
-	rand.Seed(time.Now().UnixNano())
 
-	file, err := os.Open(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-	offset, _ := strconv.Atoi(os.Args[2])
-	reader := wav.NewReader(file)
-	f, meta := reader.Format()
-	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
-
-	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
-	fmt.Println("byteRate", f.ByteRate, f.ByteRate/8, "BlockAlign", f.BlockAlign)
-	fmt.Println("BitsPerSample", f.BitsPerSample)
-	samples, _ := reader.ReadSamples(f, meta)
-	globalBreak = int(float64(len(samples))/float64(global512)) * 2 // * int(f.BlockAlign) * int(f.NumChannels)
-	fmt.Println("duration", meta.Duration, blocks, globalBreak)
-	for _, cur := range samples {
-		//fmt.Println(cur)
-		val1 := float64(1.0 * reader.FloatValue(f, cur, 0))
-		if f.NumChannels == 2 {
-			//val2 := float64(1.0 * reader.FloatValue(f, cur, 1))
-		}
-		//if rand.Intn(100) > 8 {
-		//speaker <- val
-		globalWav = append(globalWav, val1)
-		//speaker <- val
-		//}
-	}
-	fmt.Println(offset)
 	data := []float64{}
 	x := 0
 	y := len(globalWav) - 1
@@ -111,11 +88,8 @@ func omain() {
 		}
 	}
 	graph := asciigraph.Plot(data)
-
 	fmt.Println(graph)
-	go startAudio()
-	waitForSignal()
-}
+}*/
 
 func waitForSignal() os.Signal {
 	signalChan := make(chan os.Signal, 1)
@@ -150,6 +124,11 @@ func startAudio() {
 	}()
 
 	stream.Start()
+
+	for {
+		time.Sleep(time.Second)
+		globalSecond += 1
+	}
 }
 
 func process1sec(id int, items []float32) {
@@ -209,28 +188,15 @@ func process1sec(id int, items []float32) {
 
 func callback(_, out []float32) {
 
-	for i, item := range globalWav[globalIndex : globalIndex+global512] {
+	if globalIndex+global512 > len(globalWav[globalSecond]) {
+		for i := 0; i < len(out); i++ {
+			out[i] = 0.0
+		}
+		return
+	}
+	for i, item := range globalWav[globalSecond][globalIndex : globalIndex+global512] {
 		out[i] = float32(item)
 	}
 	globalIndex += global512
 
-	if globalIndex+global512 > len(globalWav) {
-		globalIndex = 0
-	}
-
-	if globalCount*global512 > globalBreak {
-		//fmt.Println("--- next ---", gc, len(globalLast))
-		//go process1sec(gc, append([]float32{}, globalLast...))
-		globalCount = 0
-		globalLast = []float32{}
-		gc += 1
-	}
-
-	globalCount += 1
-	globalLast = append(globalLast, out...)
-}
-
-type Thing struct {
-	Count int
-	Name  int
 }
