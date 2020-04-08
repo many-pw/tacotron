@@ -18,11 +18,6 @@ import (
 	"github.com/many-pw/tacotron/wav"
 )
 
-type Thing struct {
-	Count int
-	Name  int
-}
-
 var globalCount = 0
 var gc = 0
 var globalLast = []float32{}
@@ -43,13 +38,37 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	reader := wav.NewReader(file)
+	f, meta := reader.Format()
+	samples, _ := reader.ReadSamples(f, meta)
+
+	fmt.Println("")
+	fmt.Printf("%20s: %d\n", "Sample Rate", f.SampleRate)
+	fmt.Printf("%20s: %d\n", "Samples", len(samples))
+	fmt.Printf("%20s: %d\n", "Channels", f.NumChannels)
+	fmt.Printf("%20s: %d\n", "BlockAlign", f.BlockAlign)
+	fmt.Printf("%20s: %d\n", "ByteRate", f.ByteRate)
+	fmt.Printf("%20s: %d %30s\n", "BitRate", f.ByteRate/8, "")
+	fmt.Printf("%20s: %d %30s\n", "kb/s", f.ByteRate/125, "")
+	fmt.Printf("%20s: %d\n", "BitsPerSample", f.BitsPerSample)
+	fmt.Printf("%20s: %f\n", "Duration", meta.Duration)
+	fmt.Println("")
+}
+
+func omain() {
+	rand.Seed(time.Now().UnixNano())
+
+	file, err := os.Open(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
 	offset, _ := strconv.Atoi(os.Args[2])
 	reader := wav.NewReader(file)
 	f, meta := reader.Format()
 	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
 
 	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
-	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
+	fmt.Println("byteRate", f.ByteRate, f.ByteRate/8, "BlockAlign", f.BlockAlign)
 	fmt.Println("BitsPerSample", f.BitsPerSample)
 	samples, _ := reader.ReadSamples(f, meta)
 	globalBreak = int(float64(len(samples))/float64(global512)) * 2 // * int(f.BlockAlign) * int(f.NumChannels)
@@ -178,6 +197,7 @@ func process1sec(id int, items []float32) {
 	graph := asciigraph.Plot(data)
 
 	fmt.Println(graph)
+	fmt.Println(gc, gc*globalBreak)
 }
 
 func callback(_, out []float32) {
@@ -187,9 +207,13 @@ func callback(_, out []float32) {
 	}
 	globalIndex += global512
 
+	if globalIndex+global512 > len(globalWav) {
+		globalIndex = 0
+	}
+
 	if globalCount*global512 > globalBreak {
-		fmt.Println("--- next ---", gc, len(globalLast))
-		go process1sec(gc, append([]float32{}, globalLast...))
+		//fmt.Println("--- next ---", gc, len(globalLast))
+		//go process1sec(gc, append([]float32{}, globalLast...))
 		globalCount = 0
 		globalLast = []float32{}
 		gc += 1
@@ -197,4 +221,9 @@ func callback(_, out []float32) {
 
 	globalCount += 1
 	globalLast = append(globalLast, out...)
+}
+
+type Thing struct {
+	Count int
+	Name  int
 }

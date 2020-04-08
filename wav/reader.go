@@ -1,11 +1,12 @@
 package wav
 
-import "errors"
-import "bufio"
-import "io/ioutil"
-import "fmt"
-import "math"
-import "encoding/binary"
+import (
+	"bufio"
+	"encoding/binary"
+	"errors"
+	"io/ioutil"
+	"math"
+)
 
 type Reader struct {
 	rr        *TheRiffReader
@@ -22,21 +23,29 @@ func NewReader(r RIFFReader) *Reader {
 func (r *Reader) ReadSamples(f *WavFormat, meta *WavMeta) (samples []Sample, err error) {
 	blockAlign := int(f.BlockAlign)
 	bitsPerSample := int(f.BitsPerSample)
+	numChannels := int(f.NumChannels)
 
-	fmt.Println("len all", len(meta.Data), "/ ba", len(meta.Data)/blockAlign)
+	//fmt.Println("len all", len(meta.Data), "/ ba", len(meta.Data)/blockAlign)
 	samples = make([]Sample, len(meta.Data)/blockAlign)
 	offset := 0
-	j := 0
 	for i := 0; i < len(samples); i++ {
-		soffset := offset + (j * bitsPerSample / 8)
+		soffset := offset + (0 * bitsPerSample / 8)
 
-		var val uint
+		var val1 uint
 		for b := 0; b*8 < bitsPerSample; b++ {
-			//fmt.Println(soffset + b)
-			val += uint(meta.Data[soffset+b]) << uint(b*8)
+			val1 += uint(meta.Data[soffset+b]) << uint(b*8)
 		}
 
-		samples[i].Values[j] = toInt(val, bitsPerSample)
+		samples[i].Values[0] = toInt(val1, bitsPerSample)
+
+		var val2 uint
+		if numChannels == 2 {
+			soffset = offset + (1 * bitsPerSample / 8)
+			for b := 0; b*8 < bitsPerSample; b++ {
+				val2 += uint(meta.Data[soffset+b]) << uint(b*8)
+			}
+		}
+		samples[i].Values[1] = toInt(val2, bitsPerSample)
 		offset += blockAlign
 	}
 
