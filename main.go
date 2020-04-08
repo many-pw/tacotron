@@ -1,17 +1,21 @@
 package main
 
-import "os"
-import "math"
-import "strings"
-import "bufio"
-import "github.com/guptarohit/asciigraph"
-import "fmt"
-import "time"
-import "sort"
-import "math/rand"
-import "github.com/many-pw/tacotron/wav"
-import "github.com/many-pw/tacotron/cycle"
-import "github.com/gordonklaus/portaudio"
+import (
+	"bufio"
+	"fmt"
+	"math"
+	"math/rand"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/gordonklaus/portaudio"
+	"github.com/guptarohit/asciigraph"
+	"github.com/many-pw/tacotron/cycle"
+	"github.com/many-pw/tacotron/wav"
+)
 
 type Thing struct {
 	Count int
@@ -34,6 +38,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	offset, _ := strconv.Atoi(os.Args[2])
 	reader := wav.NewReader(file)
 	f, meta := reader.Format()
 	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
@@ -64,7 +69,7 @@ func main() {
 		if i > int(blocks) {
 		}
 	}
-	data := globalWav[9999:10070]
+	data := globalWav[9999+offset : 10070+offset]
 	fmt.Println(peak, low)
 	graph := asciigraph.Plot(data)
 
