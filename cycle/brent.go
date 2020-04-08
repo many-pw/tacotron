@@ -1,8 +1,6 @@
-package main
+package cycle
 
-import "fmt"
-
-func brent(cb func(i int) int, x0 int) (int, int) {
+func Brent(cb func(i int) int, x0 int) (int, int) {
 	var λ, µ, power, tortoise, hare int
 
 	// Main phase: search successive powers of two.
@@ -38,24 +36,4 @@ func brent(cb func(i int) int, x0 int) (int, int) {
 	}
 
 	return λ, µ
-}
-
-func f2(i int) int {
-	return (i*i + 1) % 255
-}
-func f(i int) int {
-	return (i*i + 1) % 255
-}
-
-func main() {
-	x0 := 3
-	λ, µ := brent(f2, x0)
-	fmt.Println("Cycle length:", λ)
-	fmt.Println("Cycle start index:", µ)
-	a := []int{}
-	for i := 0; i <= λ+1; i++ {
-		a = append(a, x0)
-		x0 = f2(x0)
-	}
-	fmt.Println("Cycle:", a[µ:µ+λ])
 }

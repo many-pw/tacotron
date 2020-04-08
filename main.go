@@ -4,11 +4,13 @@ import "os"
 import "math"
 import "strings"
 import "bufio"
+import "github.com/guptarohit/asciigraph"
 import "fmt"
 import "time"
 import "sort"
 import "math/rand"
 import "github.com/many-pw/tacotron/wav"
+import "github.com/many-pw/tacotron/cycle"
 import "github.com/gordonklaus/portaudio"
 
 type Thing struct {
@@ -26,6 +28,50 @@ var globalPause = false
 var stream *portaudio.Stream
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
+	file, err := os.Open(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
+	reader := wav.NewReader(file)
+	f, meta := reader.Format()
+	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
+
+	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
+	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
+	fmt.Println("BitsPerSample", f.BitsPerSample)
+	samples, _ := reader.ReadSamples(f, meta)
+	globalBreak = int(float64(len(samples))/float64(global512)) * 2 // * int(f.BlockAlign) * int(f.NumChannels)
+	fmt.Println("duration", meta.Duration, blocks, globalBreak)
+	peak := float64(-1.0)
+	low := float64(1.0)
+	for i, cur := range samples {
+		//fmt.Println(cur)
+		val := float64(1.0 * reader.FloatValue(f, cur, 0))
+		//if rand.Intn(100) > 8 {
+		//speaker <- val
+		globalWav = append(globalWav, val)
+		//speaker <- val
+		//}
+		if val < low {
+			low = val
+		}
+		absVal := math.Abs(float64(val))
+		if absVal > peak {
+			peak = absVal
+		}
+		if i > int(blocks) {
+		}
+	}
+	data := globalWav[9999:10070]
+	fmt.Println(peak, low)
+	graph := asciigraph.Plot(data)
+
+	fmt.Println(graph)
+}
+
+func omain() {
 	rand.Seed(time.Now().UnixNano())
 	portaudio.Initialize()
 	if len(os.Args) == 1 {
@@ -53,41 +99,6 @@ func main() {
 		}
 	}()
 
-	file, err := os.Open(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-	reader := wav.NewReader(file)
-	f, meta := reader.Format()
-	blocks := float64(len(meta.Data)) / meta.Duration / float64(f.BlockAlign)
-
-	fmt.Println("sr", f.SampleRate, "channels", f.NumChannels)
-	fmt.Println("byteRate", f.ByteRate, "BlockAlign", f.BlockAlign)
-	fmt.Println("BitsPerSample", f.BitsPerSample)
-	samples, _ := reader.ReadSamples(f, meta)
-	globalBreak = int(float64(len(samples))/float64(global512)) * 2 // * int(f.BlockAlign) * int(f.NumChannels)
-	fmt.Println("duration", meta.Duration, blocks, globalBreak)
-	peak := float64(-1.0)
-	low := float64(1.0)
-	for i, cur := range samples {
-		//fmt.Println(cur)
-		val := float64(4.0 * reader.FloatValue(f, cur, 0))
-		//if rand.Intn(100) > 8 {
-		//speaker <- val
-		globalWav = append(globalWav, val)
-		//speaker <- val
-		//}
-		if val < low {
-			low = val
-		}
-		absVal := math.Abs(float64(val))
-		if absVal > peak {
-			peak = absVal
-		}
-		if i > int(blocks) {
-		}
-	}
-	fmt.Println(peak, low)
 	go func() {
 		stream.Start()
 	}()
@@ -131,20 +142,28 @@ func process1sec(id int, items []float32) {
 	sort.Slice(things, func(i, j int) bool {
 		return things[i].Count > things[j].Count
 	})
-	for i, thing := range things {
-		fmt.Printf("%v %v %v %0.4f\n", id, thing.Count, thing.Name,
+	/*
+		for i, thing := range things {
+			fmt.Printf("%v %v %v %0.4f\n", id, thing.Count, thing.Name,
 			highsLowsSums[i]/float32(thing.Count))
-		if i > 100 {
-			break
-		}
-	}
+			if i > 100 {
+				break
+			}
+		}*/
 }
 
+func cb(index int) int {
+	fmt.Println(index)
+	return int(globalWav[globalIndex+index : globalIndex+index+1][0])
+}
 func callback(_, out []float32) {
 
 	for i, item := range globalWav[globalIndex : globalIndex+global512] {
 		out[i] = float32(item)
 	}
+	a, b := cycle.Brent(cb, 0)
+	fmt.Println("Cycle length:", a)
+	fmt.Println("Cycle start index:", b)
 	globalIndex += global512
 
 	if globalCount*global512 > globalBreak {

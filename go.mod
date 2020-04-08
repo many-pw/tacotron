@@ -7,6 +7,7 @@ require (
 	github.com/go-audio/audio v1.0.0
 	github.com/go-audio/wav v1.0.0
 	github.com/gordonklaus/portaudio v0.0.0-20180817120803-00e7307ccd93
+	github.com/guptarohit/asciigraph v0.4.1
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 // indirect
 	github.com/r9y9/gossp v0.0.1
 	github.com/youpy/go-riff v0.0.0-20131220112943-557d78c11efb // indirect
