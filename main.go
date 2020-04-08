@@ -6,14 +6,15 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"sort"
+	"os/signal"
+	//	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gordonklaus/portaudio"
 	"github.com/guptarohit/asciigraph"
-	"github.com/many-pw/tacotron/cycle"
+	//	"github.com/many-pw/tacotron/cycle"
 	"github.com/many-pw/tacotron/wav"
 )
 
@@ -21,6 +22,10 @@ type Thing struct {
 	Count int
 	Name  int
 }
+
+var globalCount = 0
+var gc = 0
+var globalLast = []float32{}
 
 //var speaker = make(chan float64, 1024*10)
 var globalWav = []float64{}
@@ -74,11 +79,6 @@ func main() {
 	x := 0
 	y := len(globalWav) - 1
 
-	x = (len(globalWav) / 2) / 2
-	y = len(globalWav) - x - 1
-
-	x = (len(globalWav) / 8) / 2
-	y = len(globalWav) - x - 1
 	for i, item := range globalWav[x:y] {
 		if i%(len(globalWav[x:y])/75) == 0 {
 			data = append(data, item)
@@ -87,15 +87,21 @@ func main() {
 	graph := asciigraph.Plot(data)
 
 	fmt.Println(graph)
+	go startAudio()
+	waitForSignal()
 }
 
-func omain() {
-	rand.Seed(time.Now().UnixNano())
+func waitForSignal() os.Signal {
+	signalChan := make(chan os.Signal, 1)
+	defer close(signalChan)
+	signal.Notify(signalChan, os.Kill, os.Interrupt)
+	s := <-signalChan
+	signal.Stop(signalChan)
+	return s
+}
+
+func startAudio() {
 	portaudio.Initialize()
-	if len(os.Args) == 1 {
-		fmt.Println("enter 1st param")
-		return
-	}
 	stream, _ = portaudio.OpenDefaultStream(0, 1, 44100, global512, callback)
 	go func() {
 		for {
@@ -117,71 +123,68 @@ func omain() {
 		}
 	}()
 
-	go func() {
-		stream.Start()
-	}()
-	time.Sleep(time.Second * 100)
+	stream.Start()
 }
-
-var globalCount = 0
-var gc = 0
-var globalLast = []float32{}
 
 func process1sec(id int, items []float32) {
-	var highsLows = map[int]int{}
-	var highsLowsSums = map[int]float32{}
-	var highsLowsSum float32
-	var dir = ""
-	var prevVal = float32(0.0)
-	var highLowCount = 0
-	for i, val := range items {
-		if val > prevVal && dir != "up" {
-			dir = "up"
-			highLowCount = 0
-			highsLowsSums[i] = highsLowsSum
-			highsLowsSum = 0
-		} else if val < prevVal && dir != "down" {
-			dir = "down"
-			highLowCount = 0
-			highsLowsSums[i] = highsLowsSum
-			highsLowsSum = 0
-		} else {
-			highLowCount += 1
-			highsLows[i] = highLowCount
-			highsLowsSum += val
-		}
-		prevVal = val
-	}
-	things := []Thing{}
-	for k, v := range highsLows {
-		thing := Thing{v, k}
-		things = append(things, thing)
-	}
-	sort.Slice(things, func(i, j int) bool {
-		return things[i].Count > things[j].Count
-	})
 	/*
-		for i, thing := range things {
-			fmt.Printf("%v %v %v %0.4f\n", id, thing.Count, thing.Name,
-			highsLowsSums[i]/float32(thing.Count))
-			if i > 100 {
-				break
+			for i, thing := range things {
+				fmt.Printf("%v %v %v %0.4f\n", id, thing.Count, thing.Name,
+				highsLowsSums[i]/float32(thing.Count))
+				if i > 100 {
+					break
+				}
 			}
-		}*/
+		var highsLows = map[int]int{}
+		var highsLowsSums = map[int]float32{}
+		var highsLowsSum float32
+		var dir = ""
+		var prevVal = float32(0.0)
+		var highLowCount = 0
+		for i, val := range items {
+			if val > prevVal && dir != "up" {
+				dir = "up"
+				highLowCount = 0
+				highsLowsSums[i] = highsLowsSum
+				highsLowsSum = 0
+			} else if val < prevVal && dir != "down" {
+				dir = "down"
+				highLowCount = 0
+				highsLowsSums[i] = highsLowsSum
+				highsLowsSum = 0
+			} else {
+				highLowCount += 1
+				highsLows[i] = highLowCount
+				highsLowsSum += val
+			}
+			prevVal = val
+		}
+		things := []Thing{}
+		for k, v := range highsLows {
+			thing := Thing{v, k}
+			things = append(things, thing)
+		}
+		sort.Slice(things, func(i, j int) bool {
+			return things[i].Count > things[j].Count
+		})
+	*/
+	data := []float64{}
+
+	for i, item := range items {
+		if i%(len(items)/75) == 0 {
+			data = append(data, float64(item))
+		}
+	}
+	graph := asciigraph.Plot(data)
+
+	fmt.Println(graph)
 }
 
-func cb(index int) int {
-	fmt.Println(index)
-	return int(globalWav[globalIndex+index : globalIndex+index+1][0])
-}
 func callback(_, out []float32) {
 
 	for i, item := range globalWav[globalIndex : globalIndex+global512] {
 		out[i] = float32(item)
 	}
-	a, b := cycle.Brent(cb, 0)
-	fmt.Println("Cycle length:", a)
-	fmt.Println("Cycle start index:", b)
 	globalIndex += global512
 
 	if globalCount*global512 > globalBreak {
