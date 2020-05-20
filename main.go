@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+
 	//	"sort"
 	//"strconv"
 	"strings"
@@ -14,7 +15,9 @@ import (
 
 	"github.com/gordonklaus/portaudio"
 	"github.com/guptarohit/asciigraph"
+
 	//	"github.com/many-pw/tacotron/cycle"
+
 	"github.com/many-pw/tacotron/wav"
 )
 
@@ -55,44 +58,31 @@ func main() {
 	fmt.Printf("%20s: %d\n", "BitsPerSample", f.BitsPerSample)
 	fmt.Printf("%20s: %f\n", "Duration", meta.Duration)
 	fmt.Println("")
-	bCounter := 0
-	second := 0
-	for range samples {
-		bCounter += int(f.BitsPerSample)
-		if bCounter/1000 >= int(f.ByteRate/125) {
-			bCounter = 0
-			second += 1
-		}
-	}
-	factor := 1
-	if second < int(meta.Duration) {
-		factor = 2
-	}
-	second = 0
+	parts := []wav.Sample{}
+	c := 0
 	for _, cur := range samples {
 		val1 := float64(1.0 * reader.FloatValue(f, cur, 0))
 		if f.NumChannels == 2 {
 			//val2 := float64(1.0 * reader.FloatValue(f, cur, 1))
 		}
-		globalWav[second] = append(globalWav[second], val1)
-		globalWavArray = append(globalWavArray, val1)
 
-		bCounter += int(f.BitsPerSample)
-		if bCounter/1000 >= int(f.ByteRate/125)/factor {
-			//fmt.Println(bCounter)
-			bCounter = 0
-			second += 1
+		parts = append(parts, cur)
+		if len(parts) > 10000*200 {
+			fmt.Printf("%d %.7f\n", c, val1)
+			writeWav(c, parts)
+			parts = []wav.Sample{}
+			c++
 		}
 	}
-	fmt.Println("remaining", bCounter)
-	go startAudio(int(f.SampleRate))
-
-	for i := 0; i < len(globalWav); i++ {
-		plot(i, globalWav[i])
-	}
-	waitForSignal()
 }
 
+func writeWav(c int, samples []wav.Sample) {
+	outfile, _ := os.Create(fmt.Sprintf("foo_%d.wav", c))
+	writer := wav.NewWriter(outfile, uint32(len(samples)), 2, 44100, 16)
+	writer.WriteSamples(samples)
+	outfile.Close()
+
+}
 func plot(second int, items []float64) {
 	data := []float64{}
 
@@ -100,7 +90,8 @@ func plot(second int, items []float64) {
 	for _, ca := range twoD {
 		sum := float64(0)
 		for _, c := range ca {
-			sum += cmplx.Abs(c)
+			r, theta := cmplx.Polar(c)
+			sum += r * theta
 		}
 		data = append(data, sum/float64(len(ca)))
 	}

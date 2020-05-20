@@ -52,3 +52,12 @@ type Chunk struct {
 	ChunkSize uint32
 	RIFFReader
 }
+
+type RiffWriter struct {
+	io.Writer
+}
+
+type Writer struct {
+	io.Writer
+	Format *WavFormat
+}
