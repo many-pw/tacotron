@@ -6,7 +6,9 @@ import (
 	"math/cmplx"
 	"math/rand"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strconv"
 
 	//	"sort"
 	//"strconv"
@@ -67,7 +69,7 @@ func main() {
 		}
 
 		parts = append(parts, cur)
-		if len(parts) > 10000*200 {
+		if len(parts) > 45000 { // 10000 * 200 = 47 secs
 			fmt.Printf("%d %.7f\n", c, val1)
 			writeWav(c, parts)
 			parts = []wav.Sample{}
@@ -77,12 +79,39 @@ func main() {
 }
 
 func writeWav(c int, samples []wav.Sample) {
-	outfile, _ := os.Create(fmt.Sprintf("foo_%d.wav", c))
+	f := fmt.Sprintf("foo_%d.wav", c)
+	outfile, _ := os.Create(f)
 	writer := wav.NewWriter(outfile, uint32(len(samples)), 2, 44100, 16)
 	writer.WriteSamples(samples)
 	outfile.Close()
-
+	cmd := exec.Command("python3", "simple.py", "/Users/aa/src/tacotron/"+f)
+	cmd.Dir = "/Users/aa/tts/resemblyzer/"
+	b, _ := cmd.Output()
+	embeds := string(b)
+	tokens := strings.Split(embeds, "\n")
+	on := false
+	list256 := []float64{}
+	for _, line := range tokens {
+		if on {
+			parts := strings.Split(line, " ")
+			for _, part := range parts {
+				if part == " " || part == "" || part == "]" || part == "[" {
+					continue
+				}
+				val := 0.0
+				if part != "0." {
+					val, _ = strconv.ParseFloat(part, 10)
+				}
+				list256 = append(list256, val)
+			}
+		}
+		if strings.HasPrefix(line, "e ") {
+			on = true
+		}
+	}
+	fmt.Println(len(list256))
 }
+
 func plot(second int, items []float64) {
 	data := []float64{}
 
